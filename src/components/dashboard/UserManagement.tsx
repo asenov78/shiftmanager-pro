@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, X } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -24,6 +24,7 @@ interface User {
 export const UserManagement = () => {
   const { toast } = useToast();
   const [showUserForm, setShowUserForm] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([
     {
       id: 1,
@@ -58,6 +59,33 @@ export const UserManagement = () => {
     });
   };
 
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setNewUser({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+    });
+  };
+
+  const handleUpdateUser = () => {
+    if (!editingUser) return;
+    
+    setUsers(users.map((user) => 
+      user.id === editingUser.id 
+        ? { ...user, ...newUser }
+        : user
+    ));
+    
+    setEditingUser(null);
+    setNewUser({ name: "", email: "", role: "Employee", department: "IT" });
+    toast({
+      title: "Success",
+      description: "User updated successfully",
+    });
+  };
+
   const handleDeleteUser = (id: number) => {
     setUsers(users.filter((user) => user.id !== id));
     toast({
@@ -66,14 +94,21 @@ export const UserManagement = () => {
     });
   };
 
+  const handleCancelEdit = () => {
+    setEditingUser(null);
+    setNewUser({ name: "", email: "", role: "Employee", department: "IT" });
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>User Management</CardTitle>
-        <Button onClick={() => setShowUserForm(true)}>Add User</Button>
+        {!editingUser && (
+          <Button onClick={() => setShowUserForm(true)}>Add User</Button>
+        )}
       </CardHeader>
       <CardContent>
-        {showUserForm && (
+        {(showUserForm || editingUser) && (
           <div className="mb-6 p-4 border rounded-lg space-y-4">
             <Input
               placeholder="Name"
@@ -91,13 +126,28 @@ export const UserManagement = () => {
               }
             />
             <div className="flex gap-2">
-              <Button onClick={handleAddUser}>Save</Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowUserForm(false)}
-              >
-                Cancel
-              </Button>
+              {editingUser ? (
+                <>
+                  <Button onClick={handleUpdateUser}>Update</Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button onClick={handleAddUser}>Save</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowUserForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -123,12 +173,7 @@ export const UserManagement = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => {
-                        toast({
-                          title: "Edit User",
-                          description: "Edit functionality coming soon",
-                        });
-                      }}
+                      onClick={() => handleEditUser(user)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
