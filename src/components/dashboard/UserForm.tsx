@@ -9,6 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+
+interface Department {
+  id: string;
+  name: string;
+}
 
 interface UserFormProps {
   user: {
@@ -32,6 +38,15 @@ export const UserForm = ({
   onCancel,
   onChange,
 }: UserFormProps) => {
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    const savedDepartments = localStorage.getItem("departments");
+    if (savedDepartments) {
+      setDepartments(JSON.parse(savedDepartments));
+    }
+  }, []);
+
   return (
     <div className="mb-6 p-4 border rounded-lg space-y-4">
       <Input
@@ -66,11 +81,11 @@ export const UserForm = ({
           <SelectValue placeholder="Select department" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="IT">IT</SelectItem>
-          <SelectItem value="HR">HR</SelectItem>
-          <SelectItem value="Finance">Finance</SelectItem>
-          <SelectItem value="Marketing">Marketing</SelectItem>
-          <SelectItem value="Operations">Operations</SelectItem>
+          {departments.map((dept) => (
+            <SelectItem key={dept.id} value={dept.name}>
+              {dept.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <div className="flex gap-2">
