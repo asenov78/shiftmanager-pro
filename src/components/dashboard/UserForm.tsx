@@ -2,6 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { User } from "@/types/user";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface UserFormProps {
   user: {
@@ -38,6 +45,34 @@ export const UserForm = ({
         value={user.email}
         onChange={(e) => onChange("email", e.target.value)}
       />
+      <Select
+        value={user.role}
+        onValueChange={(value) => onChange("role", value)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Employee">Employee</SelectItem>
+          <SelectItem value="Manager">Manager</SelectItem>
+          <SelectItem value="Admin">Admin</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={user.department}
+        onValueChange={(value) => onChange("department", value)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select department" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="IT">IT</SelectItem>
+          <SelectItem value="HR">HR</SelectItem>
+          <SelectItem value="Finance">Finance</SelectItem>
+          <SelectItem value="Marketing">Marketing</SelectItem>
+          <SelectItem value="Operations">Operations</SelectItem>
+        </SelectContent>
+      </Select>
       <div className="flex gap-2">
         {editingUser ? (
           <>
