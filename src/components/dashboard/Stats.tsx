@@ -1,15 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, Clock, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface StatCardProps {
   title: string;
   value: string;
   description: string;
   icon: React.ElementType;
+  onClick?: () => void;
 }
 
-const StatCard = ({ title, value, description, icon: Icon }: StatCardProps) => (
-  <Card className="hover:shadow-lg transition-shadow">
+const StatCard = ({ title, value, description, icon: Icon, onClick }: StatCardProps) => (
+  <Card 
+    className={`hover:shadow-lg transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
+    onClick={onClick}
+  >
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -22,12 +27,17 @@ const StatCard = ({ title, value, description, icon: Icon }: StatCardProps) => (
 );
 
 export const Stats = () => {
+  const navigate = useNavigate();
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+  const employeeCount = users.filter((user: any) => user.role === "Employee").length;
+
   const stats = [
     {
       title: "Total Employees",
-      value: "23",
+      value: employeeCount.toString(),
       icon: Users,
       description: "Active employees",
+      onClick: () => navigate("/dashboard", { state: { scrollToUsers: true } })
     },
     {
       title: "Departments",

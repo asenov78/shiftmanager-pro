@@ -1,17 +1,26 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Stats } from "@/components/dashboard/Stats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { UserManagement } from "@/components/dashboard/UserManagement";
 import { ShiftCalendar } from "@/components/shifts/ShiftCalendar";
+import { useEffect, useRef } from "react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const userManagementRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
+
+  useEffect(() => {
+    if (location.state?.scrollToUsers && userManagementRef.current) {
+      userManagementRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [location.state?.scrollToUsers]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,7 +44,9 @@ const Dashboard = () => {
         <Stats />
         <ShiftCalendar />
         <QuickActions />
-        <UserManagement />
+        <div ref={userManagementRef}>
+          <UserManagement />
+        </div>
       </main>
     </div>
   );
