@@ -29,6 +29,7 @@ const StatCard = ({ title, value, description, icon: Icon, onClick }: StatCardPr
 export const Stats = () => {
   const navigate = useNavigate();
   const users = JSON.parse(localStorage.getItem("users") || "[]");
+  const departments = JSON.parse(localStorage.getItem("departments") || "[]");
   const employeeCount = users.filter((user: any) => user.role === "Employee").length;
 
   const stats = [
@@ -41,9 +42,10 @@ export const Stats = () => {
     },
     {
       title: "Departments",
-      value: "4",
+      value: departments.length.toString(),
       icon: Building,
       description: "Across organization",
+      onClick: () => navigate("/dashboard", { state: { scrollToDepartments: true } })
     },
     {
       title: "Active Shifts",

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Stats } from "@/components/dashboard/Stats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { UserManagement } from "@/components/dashboard/UserManagement";
+import { DepartmentManagement } from "@/components/dashboard/DepartmentManagement";
 import { ShiftCalendar } from "@/components/shifts/ShiftCalendar";
 import { useEffect, useRef } from "react";
 
@@ -10,6 +11,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userManagementRef = useRef<HTMLDivElement>(null);
+  const departmentManagementRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -20,7 +22,10 @@ const Dashboard = () => {
     if (location.state?.scrollToUsers && userManagementRef.current) {
       userManagementRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [location.state?.scrollToUsers]);
+    if (location.state?.scrollToDepartments && departmentManagementRef.current) {
+      departmentManagementRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [location.state?.scrollToUsers, location.state?.scrollToDepartments]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -46,6 +51,9 @@ const Dashboard = () => {
         <QuickActions />
         <div ref={userManagementRef}>
           <UserManagement />
+        </div>
+        <div ref={departmentManagementRef}>
+          <DepartmentManagement />
         </div>
       </main>
     </div>
