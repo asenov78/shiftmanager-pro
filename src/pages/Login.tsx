@@ -18,14 +18,27 @@ const Login = () => {
 
       // Only create admin if no admin exists
       if (!existingUsers || existingUsers.length === 0) {
-        const { data, error } = await supabase.auth.signUp({
+        // First try to sign up
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: 'admin@example.com',
           password: 'admin123',
         });
 
-        if (error) {
-          console.error('Error creating admin:', error);
+        if (signUpError && signUpError.message !== 'User already registered') {
+          console.error('Error creating admin:', signUpError);
           toast.error('Failed to create admin user');
+          return;
+        }
+
+        // If sign up was successful or user exists, try to sign in
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email: 'admin@example.com',
+          password: 'admin123',
+        });
+
+        if (signInError) {
+          console.error('Error signing in admin:', signInError);
+          toast.error('Failed to sign in admin user');
           return;
         }
 
@@ -41,7 +54,7 @@ const Login = () => {
             return;
           }
 
-          toast.success('Admin user created successfully');
+          toast.success('Admin user created and signed in successfully');
         }
       }
     };
