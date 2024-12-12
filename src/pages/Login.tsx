@@ -25,47 +25,58 @@ const Login = () => {
 
         // Only create admin if no admin exists
         if (!existingUsers || existingUsers.length === 0) {
-          try {
-            // Try to sign in first in case user exists
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-              email: 'admin@example.com',
-              password: 'admin123',
-            });
+          const adminEmail = 'admin.user@example.com';
+          const adminPassword = 'admin123';
 
-            // If sign in fails, try to sign up
-            if (signInError) {
-              const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                email: 'admin@example.com',
-                password: 'admin123',
+          // Try to sign up the admin user
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: adminEmail,
+            password: adminPassword,
+            options: {
+              data: {
+                name: 'Admin User'
+              }
+            }
+          });
+
+          if (signUpError) {
+            console.error('Error in signup process:', signUpError);
+            
+            // If user might already exist, try signing in
+            if (signUpError.message.includes('already registered')) {
+              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email: adminEmail,
+                password: adminPassword,
               });
 
-              if (signUpError) {
-                console.error('Error creating admin:', signUpError);
-                toast.error('Failed to create admin user');
+              if (signInError) {
+                console.error('Error signing in:', signInError);
+                toast.error('Failed to authenticate admin user');
                 return;
               }
 
-              if (signUpData.user) {
-                // Call the make_user_admin function
-                const { error: adminError } = await supabase.rpc('make_user_admin', {
-                  user_id: signUpData.user.id
-                });
-
-                if (adminError) {
-                  console.error('Error setting admin role:', adminError);
-                  toast.error('Failed to set admin role');
-                  return;
-                }
-
-                toast.success('Admin user created successfully');
+              if (signInData.user) {
+                toast.success('Admin signed in successfully');
               }
-            } else if (signInData.user) {
-              // User exists and signed in successfully
-              toast.success('Admin signed in successfully');
+            } else {
+              toast.error('Failed to create admin user');
             }
-          } catch (error) {
-            console.error('Error in admin creation process:', error);
-            toast.error('An error occurred during admin setup');
+            return;
+          }
+
+          if (signUpData.user) {
+            // Call the make_user_admin function
+            const { error: adminError } = await supabase.rpc('make_user_admin', {
+              user_id: signUpData.user.id
+            });
+
+            if (adminError) {
+              console.error('Error setting admin role:', adminError);
+              toast.error('Failed to set admin role');
+              return;
+            }
+
+            toast.success('Admin user created successfully');
           }
         }
       } catch (error) {
