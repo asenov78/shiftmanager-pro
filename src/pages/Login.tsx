@@ -12,71 +12,61 @@ const Login = () => {
     // Create admin user on component mount
     const createAdminUser = async () => {
       try {
-        // Check for existing admin users
+        // Check for existing admin users first
         const { data: existingUsers, error: queryError } = await supabase
           .from('profiles')
-          .select('role')
-          .eq('role', 'Admin');
+          .select('id, role')
+          .eq('role', 'Admin')
+          .single();
 
-        if (queryError) {
+        if (queryError && !queryError.message.includes('No rows found')) {
           console.error('Error checking for admin:', queryError);
           return;
         }
 
-        // Only create admin if no admin exists
-        if (!existingUsers || existingUsers.length === 0) {
-          const adminEmail = 'admin.user@example.com';
-          const adminPassword = 'admin123';
+        // If admin exists, don't try to create one
+        if (existingUsers?.id) {
+          console.log('Admin user already exists');
+          return;
+        }
 
-          // Try signing in first since the user might exist
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: adminEmail,
-            password: adminPassword,
+        const adminEmail = 'admin.user@example.com';
+        const adminPassword = 'admin123';
+
+        // Since we know admin doesn't exist, try to create one
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: adminEmail,
+          password: adminPassword,
+          options: {
+            data: {
+              name: 'Admin User'
+            }
+          }
+        });
+
+        if (signUpError) {
+          console.error('Error in signup process:', signUpError);
+          
+          if (signUpError.message.includes('rate limit')) {
+            toast.error('Too many attempts. Please wait a few minutes before trying again.');
+          } else {
+            toast.error('Failed to create admin user. Please try again later.');
+          }
+          return;
+        }
+
+        if (signUpData.user) {
+          const { error: adminError } = await supabase.rpc('make_user_admin', {
+            user_id: signUpData.user.id
           });
 
-          if (signInError) {
-            // Only attempt signup if signin fails and it's not a rate limit error
-            if (!signInError.message.includes('rate limit')) {
-              const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                email: adminEmail,
-                password: adminPassword,
-                options: {
-                  data: {
-                    name: 'Admin User'
-                  }
-                }
-              });
-
-              if (signUpError) {
-                console.error('Error in signup process:', signUpError);
-                
-                if (signUpError.message.includes('rate limit')) {
-                  toast.error('Too many attempts. Please wait a few minutes before trying again.');
-                } else {
-                  toast.error('Failed to create admin user. Please try again later.');
-                }
-                return;
-              }
-
-              if (signUpData.user) {
-                const { error: adminError } = await supabase.rpc('make_user_admin', {
-                  user_id: signUpData.user.id
-                });
-
-                if (adminError) {
-                  console.error('Error setting admin role:', adminError);
-                  toast.error('Failed to set admin role');
-                  return;
-                }
-
-                toast.success('Admin user created successfully');
-              }
-            } else {
-              toast.error('Too many attempts. Please wait a few minutes before trying again.');
-            }
-          } else if (signInData.user) {
-            toast.success('Admin signed in successfully');
+          if (adminError) {
+            console.error('Error setting admin role:', adminError);
+            toast.error('Failed to set admin role');
+            return;
           }
+
+          toast.success('Admin user created successfully');
         }
       } catch (error) {
         console.error('Error in admin creation process:', error);
