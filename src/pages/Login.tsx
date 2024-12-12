@@ -12,17 +12,6 @@ const Login = () => {
     // Create admin user on component mount
     const createAdminUser = async () => {
       try {
-        // First try to sign in as admin
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: 'admin.user@example.com',
-          password: 'admin123'
-        });
-
-        // If sign in succeeds, we're done
-        if (!signInError) {
-          return;
-        }
-
         // Check for existing admin users first
         const { data: existingUsers, error: queryError } = await supabase
           .from('profiles')
@@ -40,13 +29,13 @@ const Login = () => {
           return;
         }
 
+        // Add initial delay before any auth attempts
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         const adminEmail = 'admin.user@example.com';
         const adminPassword = 'admin123';
 
-        // Add a delay before signup attempt to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Since we know admin doesn't exist, try to create one
+        // Try to sign up the admin user
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: adminEmail,
           password: adminPassword,
@@ -61,7 +50,7 @@ const Login = () => {
           console.error('Error in signup process:', signUpError);
           
           if (signUpError.message.includes('rate limit')) {
-            toast.error('Too many attempts. Please try again in a few minutes.');
+            toast.error('Rate limit reached. Please try again in a few minutes.');
             return;
           }
           
@@ -70,8 +59,8 @@ const Login = () => {
         }
 
         if (signUpData.user) {
-          // Wait a brief moment to ensure the profile trigger has completed
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Wait for the profile trigger to complete
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
           const { error: adminError } = await supabase.rpc('make_user_admin', {
             user_id: signUpData.user.id
