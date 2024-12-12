@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, Clock, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StatCardProps {
   title: string;
@@ -28,9 +30,31 @@ const StatCard = ({ title, value, description, icon: Icon, onClick }: StatCardPr
 
 export const Stats = () => {
   const navigate = useNavigate();
-  const users = JSON.parse(localStorage.getItem("users") || "[]");
-  const departments = JSON.parse(localStorage.getItem("departments") || "[]");
-  const employeeCount = users.filter((user: any) => user.role === "Employee").length;
+
+  const { data: employeeCount = 0 } = useQuery({
+    queryKey: ['employeeCount'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'Employee');
+      
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  const { data: departmentCount = 0 } = useQuery({
+    queryKey: ['departmentCount'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('departments')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    }
+  });
 
   const stats = [
     {
@@ -42,7 +66,7 @@ export const Stats = () => {
     },
     {
       title: "Departments",
-      value: departments.length.toString(),
+      value: departmentCount.toString(),
       icon: Building,
       description: "Across organization",
       onClick: () => navigate("/dashboard", { state: { scrollToDepartments: true } })

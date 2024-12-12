@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pencil, Trash } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Department {
   id: string;
@@ -25,44 +26,66 @@ interface Department {
 }
 
 export const DepartmentManagement = () => {
-  const [departments, setDepartments] = useState<Department[]>(() => {
-    const saved = localStorage.getItem("departments");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [departmentName, setDepartmentName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const saveDepartments = (newDepartments: Department[]) => {
-    localStorage.setItem("departments", JSON.stringify(newDepartments));
-    setDepartments(newDepartments);
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("departments")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setDepartments(data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      toast.error("Failed to load departments");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!departmentName.trim()) {
       toast.error("Department name is required");
       return;
     }
 
-    if (editingDepartment) {
-      const updated = departments.map((dept) =>
-        dept.id === editingDepartment.id ? { ...dept, name: departmentName } : dept
-      );
-      saveDepartments(updated);
-      toast.success("Department updated successfully");
-    } else {
-      const newDepartment = {
-        id: crypto.randomUUID(),
-        name: departmentName,
-      };
-      saveDepartments([...departments, newDepartment]);
-      toast.success("Department added successfully");
-    }
+    try {
+      if (editingDepartment) {
+        const { error } = await supabase
+          .from("departments")
+          .update({ name: departmentName })
+          .eq("id", editingDepartment.id);
 
-    setDepartmentName("");
-    setEditingDepartment(null);
-    setIsOpen(false);
+        if (error) throw error;
+        toast.success("Department updated successfully");
+      } else {
+        const { error } = await supabase
+          .from("departments")
+          .insert([{ name: departmentName }]);
+
+        if (error) throw error;
+        toast.success("Department added successfully");
+      }
+
+      fetchDepartments();
+      setDepartmentName("");
+      setEditingDepartment(null);
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error managing department:", error);
+      toast.error("Failed to save department");
+    }
   };
 
   const handleEdit = (department: Department) => {
@@ -71,11 +94,25 @@ export const DepartmentManagement = () => {
     setIsOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    const updated = departments.filter((dept) => dept.id !== id);
-    saveDepartments(updated);
-    toast.success("Department deleted successfully");
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("departments")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Department deleted successfully");
+      fetchDepartments();
+    } catch (error) {
+      console.error("Error deleting department:", error);
+      toast.error("Failed to delete department");
+    }
   };
+
+  if (isLoading) {
+    return <div>Loading departments...</div>;
+  }
 
   return (
     <div className="space-y-4">
