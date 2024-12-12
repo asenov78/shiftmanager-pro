@@ -28,55 +28,54 @@ const Login = () => {
           const adminEmail = 'admin.user@example.com';
           const adminPassword = 'admin123';
 
-          // Try to sign up the admin user
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          // Try signing in first since the user might exist
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: adminEmail,
             password: adminPassword,
-            options: {
-              data: {
-                name: 'Admin User'
-              }
-            }
           });
 
-          if (signUpError) {
-            console.error('Error in signup process:', signUpError);
-            
-            // If user might already exist, try signing in
-            if (signUpError.message.includes('already registered')) {
-              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          if (signInError) {
+            // Only attempt signup if signin fails and it's not a rate limit error
+            if (!signInError.message.includes('rate limit')) {
+              const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                 email: adminEmail,
                 password: adminPassword,
+                options: {
+                  data: {
+                    name: 'Admin User'
+                  }
+                }
               });
 
-              if (signInError) {
-                console.error('Error signing in:', signInError);
-                toast.error('Failed to authenticate admin user');
+              if (signUpError) {
+                console.error('Error in signup process:', signUpError);
+                
+                if (signUpError.message.includes('rate limit')) {
+                  toast.error('Too many attempts. Please wait a few minutes before trying again.');
+                } else {
+                  toast.error('Failed to create admin user. Please try again later.');
+                }
                 return;
               }
 
-              if (signInData.user) {
-                toast.success('Admin signed in successfully');
+              if (signUpData.user) {
+                const { error: adminError } = await supabase.rpc('make_user_admin', {
+                  user_id: signUpData.user.id
+                });
+
+                if (adminError) {
+                  console.error('Error setting admin role:', adminError);
+                  toast.error('Failed to set admin role');
+                  return;
+                }
+
+                toast.success('Admin user created successfully');
               }
             } else {
-              toast.error('Failed to create admin user');
+              toast.error('Too many attempts. Please wait a few minutes before trying again.');
             }
-            return;
-          }
-
-          if (signUpData.user) {
-            // Call the make_user_admin function
-            const { error: adminError } = await supabase.rpc('make_user_admin', {
-              user_id: signUpData.user.id
-            });
-
-            if (adminError) {
-              console.error('Error setting admin role:', adminError);
-              toast.error('Failed to set admin role');
-              return;
-            }
-
-            toast.success('Admin user created successfully');
+          } else if (signInData.user) {
+            toast.success('Admin signed in successfully');
           }
         }
       } catch (error) {
