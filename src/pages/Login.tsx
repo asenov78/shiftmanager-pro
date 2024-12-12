@@ -16,16 +16,15 @@ const Login = () => {
         const { data: existingUsers, error: queryError } = await supabase
           .from('profiles')
           .select('id, role')
-          .eq('role', 'Admin')
-          .single();
+          .eq('role', 'Admin');
 
-        if (queryError && !queryError.message.includes('No rows found')) {
+        if (queryError) {
           console.error('Error checking for admin:', queryError);
           return;
         }
 
         // If admin exists, don't try to create one
-        if (existingUsers?.id) {
+        if (existingUsers && existingUsers.length > 0) {
           console.log('Admin user already exists');
           return;
         }
@@ -56,6 +55,9 @@ const Login = () => {
         }
 
         if (signUpData.user) {
+          // Wait a brief moment to ensure the profile trigger has completed
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           const { error: adminError } = await supabase.rpc('make_user_admin', {
             user_id: signUpData.user.id
           });
