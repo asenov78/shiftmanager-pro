@@ -12,6 +12,17 @@ const Login = () => {
     // Create admin user on component mount
     const createAdminUser = async () => {
       try {
+        // First try to sign in as admin
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: 'admin.user@example.com',
+          password: 'admin123'
+        });
+
+        // If sign in succeeds, we're done
+        if (!signInError) {
+          return;
+        }
+
         // Check for existing admin users first
         const { data: existingUsers, error: queryError } = await supabase
           .from('profiles')
@@ -32,6 +43,9 @@ const Login = () => {
         const adminEmail = 'admin.user@example.com';
         const adminPassword = 'admin123';
 
+        // Add a delay before signup attempt to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         // Since we know admin doesn't exist, try to create one
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: adminEmail,
@@ -47,10 +61,11 @@ const Login = () => {
           console.error('Error in signup process:', signUpError);
           
           if (signUpError.message.includes('rate limit')) {
-            toast.error('Too many attempts. Please wait a few minutes before trying again.');
-          } else {
-            toast.error('Failed to create admin user. Please try again later.');
+            toast.error('Too many attempts. Please try again in a few minutes.');
+            return;
           }
+          
+          toast.error('Failed to create admin user. Please try again later.');
           return;
         }
 
