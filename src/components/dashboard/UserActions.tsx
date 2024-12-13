@@ -25,19 +25,26 @@ export const useUserActions = (): UserActionsHook => {
         throw new Error("Only admins can add users");
       }
 
-      // Check if user already exists
-      const { data: existingUsers } = await supabase
+      // Check if user already exists in auth system
+      const { data: existingAuthUser, error: authCheckError } = await supabase.auth.admin.getUserByEmail(newUser.email);
+      
+      if (existingAuthUser) {
+        throw new Error("A user with this email already exists");
+      }
+
+      // Check if user exists in profiles
+      const { data: existingProfiles } = await supabase
         .from('profiles')
         .select('email')
         .eq('email', newUser.email);
 
-      if (existingUsers && existingUsers.length > 0) {
+      if (existingProfiles && existingProfiles.length > 0) {
         throw new Error("A user with this email already exists");
       }
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: newUser.email,
-        password: 'tempPassword123', // You might want to generate a random password or let the user set it
+        password: 'tempPassword123',
         options: {
           data: {
             name: newUser.name,
@@ -60,6 +67,7 @@ export const useUserActions = (): UserActionsHook => {
         .update({
           role: newUser.role,
           department: newUser.department,
+          email: newUser.email, // Add email to profiles for easier querying
         })
         .eq('id', data.user.id);
 
@@ -68,7 +76,14 @@ export const useUserActions = (): UserActionsHook => {
       toast.success("User added successfully");
     } catch (error: any) {
       console.error("Error adding user:", error);
-      toast.error(error.message || "Failed to add user");
+      
+      // Provide more specific error messages
+      if (error.message.includes('already registered') || error.message.includes('already exists')) {
+        toast.error("A user with this email already exists");
+      } else {
+        toast.error(error.message || "Failed to add user");
+      }
+      
       throw error;
     }
   };
