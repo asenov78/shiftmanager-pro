@@ -25,16 +25,7 @@ export const useUserActions = (): UserActionsHook => {
         throw new Error("Only admins can add users");
       }
 
-      // Check if user exists in profiles
-      const { data: existingProfiles } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', newUser.email);
-
-      if (existingProfiles && existingProfiles.length > 0) {
-        throw new Error("A user with this email already exists");
-      }
-
+      // First try to sign up the user
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: newUser.email,
         password: 'tempPassword123',
@@ -45,9 +36,33 @@ export const useUserActions = (): UserActionsHook => {
         },
       });
 
+      // If user exists, we'll get an error
       if (signUpError) {
         if (signUpError.message.includes('already registered')) {
-          throw new Error("A user with this email already exists");
+          // Check if user has a profile
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data?.user?.id)
+            .single();
+
+          if (existingProfile) {
+            throw new Error("A user with this email already exists");
+          }
+
+          // If no profile exists, create one
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data?.user?.id,
+              name: newUser.name,
+              role: newUser.role,
+              department: newUser.department,
+            });
+
+          if (profileError) throw profileError;
+          toast.success("User profile created successfully");
+          return;
         }
         throw signUpError;
       }
@@ -60,7 +75,6 @@ export const useUserActions = (): UserActionsHook => {
         .update({
           role: newUser.role,
           department: newUser.department,
-          email: newUser.email, // Add email to profiles for easier querying
         })
         .eq('id', data.user.id);
 
@@ -69,14 +83,7 @@ export const useUserActions = (): UserActionsHook => {
       toast.success("User added successfully");
     } catch (error: any) {
       console.error("Error adding user:", error);
-      
-      // Provide more specific error messages
-      if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        toast.error("A user with this email already exists");
-      } else {
-        toast.error(error.message || "Failed to add user");
-      }
-      
+      toast.error(error.message || "Failed to add user");
       throw error;
     }
   };
