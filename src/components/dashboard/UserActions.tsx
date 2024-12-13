@@ -8,6 +8,11 @@ interface UserActionsHook {
   handleDeleteUser: (id: string) => Promise<void>;
 }
 
+interface AuthUser {
+  id: string;
+  email?: string;
+}
+
 export const useUserActions = (): UserActionsHook => {
   const handleAddUser = async (newUser: Omit<User, 'id' | 'created_at'>) => {
     try {
@@ -26,8 +31,11 @@ export const useUserActions = (): UserActionsHook => {
       }
 
       // First check if a user with this email exists in auth
-      const { data: { users }, error: adminError } = await supabase.auth.admin.listUsers();
-      const existingUser = users?.find(user => user.email === newUser.email);
+      const { data: authData, error: adminError } = await supabase.auth.admin.listUsers();
+      if (adminError) throw adminError;
+
+      const users = authData?.users as AuthUser[] || [];
+      const existingUser = users.find(user => user.email === newUser.email);
 
       if (existingUser) {
         // Check if user already has a profile
