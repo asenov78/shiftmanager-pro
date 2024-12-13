@@ -25,7 +25,38 @@ export const useUserActions = (): UserActionsHook => {
         throw new Error("Only admins can add users");
       }
 
-      // First try to sign up the user
+      // First check if a user with this email exists in auth
+      const { data: { users }, error: adminError } = await supabase.auth.admin.listUsers();
+      const existingUser = users?.find(user => user.email === newUser.email);
+
+      if (existingUser) {
+        // Check if user already has a profile
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', existingUser.id)
+          .single();
+
+        if (existingProfile) {
+          throw new Error("A user with this email already exists");
+        }
+
+        // If no profile exists, create one for the existing user
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: existingUser.id,
+            name: newUser.name,
+            role: newUser.role,
+            department: newUser.department,
+          });
+
+        if (profileError) throw profileError;
+        toast.success("User profile created successfully");
+        return;
+      }
+
+      // If user doesn't exist, create a new one
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: newUser.email,
         password: 'tempPassword123',
@@ -36,37 +67,7 @@ export const useUserActions = (): UserActionsHook => {
         },
       });
 
-      // If user exists, we'll get an error
-      if (signUpError) {
-        if (signUpError.message.includes('already registered')) {
-          // Check if user has a profile
-          const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data?.user?.id)
-            .single();
-
-          if (existingProfile) {
-            throw new Error("A user with this email already exists");
-          }
-
-          // If no profile exists, create one
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: data?.user?.id,
-              name: newUser.name,
-              role: newUser.role,
-              department: newUser.department,
-            });
-
-          if (profileError) throw profileError;
-          toast.success("User profile created successfully");
-          return;
-        }
-        throw signUpError;
-      }
-
+      if (signUpError) throw signUpError;
       if (!data.user) throw new Error("User creation failed");
 
       // Update the profile with additional information
