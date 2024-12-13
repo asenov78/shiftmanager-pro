@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Pencil, Trash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Department {
   id: string;
@@ -26,32 +27,41 @@ interface Department {
 }
 
 export const DepartmentManagement = () => {
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [departmentName, setDepartmentName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
-
-  const fetchDepartments = async () => {
-    try {
+  const { data: departments = [], isLoading } = useQuery({
+    queryKey: ['departments'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("departments")
         .select("*")
         .order("name");
 
       if (error) throw error;
-      setDepartments(data);
-    } catch (error) {
-      console.error("Error fetching departments:", error);
-      toast.error("Failed to load departments");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'departments' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['departments'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +88,6 @@ export const DepartmentManagement = () => {
         toast.success("Department added successfully");
       }
 
-      fetchDepartments();
       setDepartmentName("");
       setEditingDepartment(null);
       setIsOpen(false);
@@ -103,7 +112,6 @@ export const DepartmentManagement = () => {
 
       if (error) throw error;
       toast.success("Department deleted successfully");
-      fetchDepartments();
     } catch (error) {
       console.error("Error deleting department:", error);
       toast.error("Failed to delete department");

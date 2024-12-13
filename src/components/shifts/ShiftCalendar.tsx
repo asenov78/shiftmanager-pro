@@ -1,32 +1,67 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Calendar as CalendarIcon, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Shift {
-  id: number;
-  userId: number;
-  date: Date;
-  startTime: string;
-  endTime: string;
+  id: string;
+  user_id: string;
+  start_time: string;
+  end_time: string;
   status: "scheduled" | "pending-trade" | "completed";
 }
 
 export const ShiftCalendar = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const { toast } = useToast();
-  const [shifts] = useState<Shift[]>([
-    {
-      id: 1,
-      userId: 1,
-      date: new Date(),
-      startTime: "09:00",
-      endTime: "17:00",
-      status: "scheduled",
+  const queryClient = useQueryClient();
+
+  const { data: shifts = [] } = useQuery({
+    queryKey: ['shifts', date?.toISOString()],
+    queryFn: async () => {
+      if (!date) return [];
+      
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data, error } = await supabase
+        .from('shifts')
+        .select('*')
+        .gte('start_time', startOfDay.toISOString())
+        .lte('start_time', endOfDay.toISOString())
+        .order('start_time');
+
+      if (error) throw error;
+      return data;
     },
-  ]);
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shifts' },
+        () => {
+          if (date) {
+            queryClient.invalidateQueries({ 
+              queryKey: ['shifts', date.toISOString()]
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, date]);
 
   const handleAddShift = () => {
     toast({
@@ -65,7 +100,7 @@ export const ShiftCalendar = () => {
                     className="p-3 bg-secondary rounded-lg flex justify-between items-center"
                   >
                     <span>
-                      {shift.startTime} - {shift.endTime}
+                      {new Date(shift.start_time).toLocaleTimeString()} - {new Date(shift.end_time).toLocaleTimeString()}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {shift.status}
