@@ -8,6 +8,7 @@ import { ShiftCalendar } from "@/components/shifts/ShiftCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,7 +22,6 @@ const Dashboard = () => {
         return;
       }
 
-      // Update or create active session
       const { error } = await supabase
         .from('active_sessions')
         .upsert(
@@ -30,13 +30,13 @@ const Dashboard = () => {
             last_seen: new Date().toISOString()
           },
           { 
-            onConflict: 'user_id',
-            ignoreDuplicates: false 
+            onConflict: 'user_id'
           }
         );
 
       if (error) {
         console.error("Error updating active session:", error);
+        toast.error("Failed to update session status");
       }
     };
 
