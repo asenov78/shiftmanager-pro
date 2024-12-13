@@ -64,10 +64,7 @@ export const ShiftCalendar = () => {
   }, [queryClient, date]);
 
   const handleAddShift = () => {
-    toast({
-      title: "Add Shift",
-      description: "Shift creation functionality coming soon",
-    });
+    toast("Shift creation functionality coming soon");
   };
 
   return (
