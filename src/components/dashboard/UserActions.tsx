@@ -25,13 +25,6 @@ export const useUserActions = (): UserActionsHook => {
         throw new Error("Only admins can add users");
       }
 
-      // Check if user already exists in auth system
-      const { data: existingAuthUser, error: authCheckError } = await supabase.auth.admin.getUserByEmail(newUser.email);
-      
-      if (existingAuthUser) {
-        throw new Error("A user with this email already exists");
-      }
-
       // Check if user exists in profiles
       const { data: existingProfiles } = await supabase
         .from('profiles')
