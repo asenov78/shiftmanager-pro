@@ -121,25 +121,27 @@ export const useUserActions = (): UserActionsHook => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not authenticated");
 
-      // Check if current user is admin
-      const { data: currentUserProfile } = await supabase
+      // First check if the current user is an admin
+      const { data: currentUserProfile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', session.user.id)
         .single();
 
-      if (currentUserProfile?.role !== 'Admin') {
+      if (profileError) throw new Error("Failed to fetch user role");
+      
+      if (!currentUserProfile || currentUserProfile.role !== 'Admin') {
         throw new Error("Only admins can delete users");
       }
 
-      // Instead of directly deleting the auth user, we'll mark the profile as inactive
-      // and handle the actual deletion through a backend function or admin dashboard
-      const { error } = await supabase
+      // Instead of directly deleting the auth user, mark the profile as inactive
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({ role: 'Inactive' })
         .eq('id', id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+      
       toast.success("User deactivated successfully");
     } catch (error: any) {
       console.error("Error deleting user:", error);
