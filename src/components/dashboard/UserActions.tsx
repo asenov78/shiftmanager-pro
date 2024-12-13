@@ -25,9 +25,19 @@ export const useUserActions = (): UserActionsHook => {
         throw new Error("Only admins can add users");
       }
 
-      const { data, error } = await supabase.auth.signUp({
+      // Check if user already exists
+      const { data: existingUsers } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', newUser.email);
+
+      if (existingUsers && existingUsers.length > 0) {
+        throw new Error("A user with this email already exists");
+      }
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: newUser.email,
-        password: 'tempPassword123',
+        password: 'tempPassword123', // You might want to generate a random password or let the user set it
         options: {
           data: {
             name: newUser.name,
@@ -35,7 +45,13 @@ export const useUserActions = (): UserActionsHook => {
         },
       });
 
-      if (error) throw error;
+      if (signUpError) {
+        if (signUpError.message.includes('already registered')) {
+          throw new Error("A user with this email already exists");
+        }
+        throw signUpError;
+      }
+
       if (!data.user) throw new Error("User creation failed");
 
       // Update the profile with additional information
