@@ -1,62 +1,69 @@
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Stats } from "@/components/dashboard/Stats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { UserManagement } from "@/components/dashboard/UserManagement";
 import { DepartmentManagement } from "@/components/dashboard/DepartmentManagement";
 import { ShiftCalendar } from "@/components/shifts/ShiftCalendar";
-import { useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const userManagementRef = useRef<HTMLDivElement>(null);
-  const departmentManagementRef = useRef<HTMLDivElement>(null);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
 
   useEffect(() => {
-    if (location.state?.scrollToUsers && userManagementRef.current) {
-      userManagementRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-    if (location.state?.scrollToDepartments && departmentManagementRef.current) {
-      departmentManagementRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [location.state?.scrollToUsers, location.state?.scrollToDepartments]);
+    const updateActiveSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+        return;
+      }
+
+      // Update or create active session
+      const { error } = await supabase
+        .from('active_sessions')
+        .upsert(
+          { 
+            user_id: session.user.id,
+            last_seen: new Date().toISOString()
+          },
+          { 
+            onConflict: 'user_id',
+            ignoreDuplicates: false 
+          }
+        );
+
+      if (error) {
+        console.error("Error updating active session:", error);
+      }
+    };
+
+    // Update session immediately and then every minute
+    updateActiveSession();
+    const interval = setInterval(updateActiveSession, 60000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-primary">Shift Manager</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-600">Welcome, Admin</span>
-              <Button variant="outline" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar />
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <Stats />
+            <ShiftCalendar />
+            <QuickActions />
+            <UserManagement />
+            <DepartmentManagement />
           </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-6">
-        <Stats />
-        <ShiftCalendar />
-        <QuickActions />
-        <div ref={userManagementRef}>
-          <UserManagement />
-        </div>
-        <div ref={departmentManagementRef}>
-          <DepartmentManagement />
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 

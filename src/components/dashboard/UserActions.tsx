@@ -11,20 +11,21 @@ interface UserActionsHook {
 export const useUserActions = (): UserActionsHook => {
   const handleAddUser = async (newUser: Omit<User, 'id' | 'created_at'>) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.auth.admin.createUser({
         email: newUser.email,
         password: 'tempPassword123',
-        options: {
-          data: {
-            name: newUser.name,
-          },
+        email_confirm: true,
+        user_metadata: {
+          name: newUser.name,
         },
       });
 
       if (error) throw error;
 
-      // Wait for the profile trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!data.user) throw new Error("User creation failed");
 
       // Update the profile with additional information
       const { error: updateError } = await supabase
@@ -33,20 +34,23 @@ export const useUserActions = (): UserActionsHook => {
           role: newUser.role,
           department: newUser.department,
         })
-        .eq('id', data.user?.id);
+        .eq('id', data.user.id);
 
       if (updateError) throw updateError;
 
       toast.success("User added successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding user:", error);
-      toast.error("Failed to add user");
+      toast.error(error.message || "Failed to add user");
       throw error;
     }
   };
 
   const handleUpdateUser = async (editingUser: User, newUserData: Partial<User>) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not authenticated");
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -59,25 +63,25 @@ export const useUserActions = (): UserActionsHook => {
       if (error) throw error;
       
       toast.success("User updated successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+      toast.error(error.message || "Failed to update user");
       throw error;
     }
   };
 
   const handleDeleteUser = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not authenticated");
+
+      const { error } = await supabase.auth.admin.deleteUser(id);
 
       if (error) throw error;
       toast.success("User deleted successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting user:", error);
-      toast.error("Failed to delete user");
+      toast.error(error.message || "Failed to delete user");
       throw error;
     }
   };
