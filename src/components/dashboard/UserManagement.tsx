@@ -1,20 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
-import { toast } from "sonner";
 import { UserForm } from "./UserForm";
 import { UserTable } from "./UserTable";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-}
+import { User } from "@/types/user";
+import { useUsers } from "@/hooks/useUsers";
+import { useUserActions } from "./UserActions";
 
 export const UserManagement = () => {
   const [showUserForm, setShowUserForm] = useState(false);
@@ -26,119 +17,25 @@ export const UserManagement = () => {
     department: "",
   });
 
-  const queryClient = useQueryClient();
+  const { users, isLoading } = useUsers();
+  const { handleAddUser, handleUpdateUser, handleDeleteUser } = useUserActions();
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['profiles'],
-    queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return profiles;
-    },
-  });
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'profiles' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['profiles'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  const handleAddUser = async () => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: newUser.email,
-        password: 'tempPassword123', // You should implement a proper password system
-        options: {
-          data: {
-            name: newUser.name,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      // Wait for the profile trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update the profile with additional information
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          role: newUser.role,
-          department: newUser.department,
-        })
-        .eq('id', data.user?.id);
-
-      if (updateError) throw updateError;
-
-      setNewUser({ name: "", email: "", role: "Employee", department: "" });
-      setShowUserForm(false);
-      toast.success("User added successfully");
-    } catch (error) {
-      console.error("Error adding user:", error);
-      toast.error("Failed to add user");
-    }
-  };
-
-  const handleUpdateUser = async () => {
-    if (!editingUser) return;
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: newUser.name,
-          role: newUser.role,
-          department: newUser.department,
-        })
-        .eq('id', editingUser.id);
-
-      if (error) throw error;
-      
+  const handleUserSubmit = async () => {
+    if (editingUser) {
+      await handleUpdateUser(editingUser, newUser);
       setEditingUser(null);
-      setNewUser({ name: "", email: "", role: "Employee", department: "" });
-      toast.success("User updated successfully");
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+    } else {
+      await handleAddUser(newUser);
     }
-  };
-
-  const handleDeleteUser = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      toast.success("User deleted successfully");
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user");
-    }
+    setNewUser({ name: "", email: "", role: "Employee", department: "" });
+    setShowUserForm(false);
   };
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
     setNewUser({
       name: user.name || "",
-      email: "", // We don't update email
+      email: user.email || "",
       role: user.role || "Employee",
       department: user.department || "",
     });
@@ -172,8 +69,8 @@ export const UserManagement = () => {
           <UserForm
             user={newUser}
             editingUser={editingUser}
-            onSave={handleAddUser}
-            onUpdate={handleUpdateUser}
+            onSave={handleUserSubmit}
+            onUpdate={handleUserSubmit}
             onCancel={handleCancelEdit}
             onChange={handleUserChange}
           />
