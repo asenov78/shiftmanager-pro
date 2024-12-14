@@ -14,14 +14,21 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(!!session);
     });
 
+    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(!!session);
+      
+      // If user is logged out, clear the query cache
+      if (!session) {
+        queryClient.clear();
+      }
     });
 
     return () => subscription.unsubscribe();

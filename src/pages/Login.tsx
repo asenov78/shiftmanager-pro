@@ -59,14 +59,19 @@ const Login = () => {
       }
     };
 
-    createAdminUser();
+    // Check if we're already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        createAdminUser();
+      }
+    });
   }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session) {
-          navigate("/dashboard");
+        if (event === 'SIGNED_IN' && session) {
+          navigate("/dashboard", { replace: true });
         }
       }
     );
