@@ -23,7 +23,7 @@ export const useUpdateUser = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          name: newUserData.name,
+          full_name: newUserData.full_name,
           role: newUserData.role,
           department: newUserData.department,
         })

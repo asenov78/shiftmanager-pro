@@ -33,7 +33,7 @@ export const useAddUser = () => {
           .from('profiles')
           .insert({
             id: existingUser.id,
-            name: newUser.name,
+            full_name: newUser.full_name,
             role: newUser.role,
             department: newUser.department,
           });
@@ -48,7 +48,7 @@ export const useAddUser = () => {
         password: 'tempPassword123',
         options: {
           data: {
-            name: newUser.name,
+            full_name: newUser.full_name,
           },
         },
       });

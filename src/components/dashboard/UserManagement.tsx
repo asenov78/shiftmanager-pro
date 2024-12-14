@@ -11,7 +11,7 @@ export const UserManagement = () => {
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newUser, setNewUser] = useState({
-    name: "",
+    full_name: "",
     email: "",
     role: "Employee",
     department: "",
@@ -27,14 +27,14 @@ export const UserManagement = () => {
     } else {
       await handleAddUser(newUser);
     }
-    setNewUser({ name: "", email: "", role: "Employee", department: "" });
+    setNewUser({ full_name: "", email: "", role: "Employee", department: "" });
     setShowUserForm(false);
   };
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
     setNewUser({
-      name: user.name || "",
+      full_name: user.full_name || "",
       email: user.email || "",
       role: user.role || "Employee",
       department: user.department || "",
@@ -44,7 +44,7 @@ export const UserManagement = () => {
 
   const handleCancelEdit = () => {
     setEditingUser(null);
-    setNewUser({ name: "", email: "", role: "Employee", department: "" });
+    setNewUser({ full_name: "", email: "", role: "Employee", department: "" });
     setShowUserForm(false);
   };
 

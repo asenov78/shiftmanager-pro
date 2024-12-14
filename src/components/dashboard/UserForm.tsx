@@ -15,7 +15,7 @@ import { Department } from "@/types/database";
 
 interface UserFormProps {
   user: {
-    name: string;
+    full_name: string;
     email: string;
     role: string;
     department: string;
@@ -53,9 +53,9 @@ export const UserForm = ({
   return (
     <div className="mb-6 p-4 border rounded-lg space-y-4">
       <Input
-        placeholder="Name"
-        value={user.name}
-        onChange={(e) => onChange("name", e.target.value)}
+        placeholder="Full Name"
+        value={user.full_name}
+        onChange={(e) => onChange("full_name", e.target.value)}
       />
       <Input
         placeholder="Email"
