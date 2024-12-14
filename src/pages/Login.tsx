@@ -40,6 +40,9 @@ const Login = () => {
         if (event === 'SIGNED_IN' && session) {
           navigate("/dashboard", { replace: true });
         }
+        if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+          toast.error("Authentication error occurred");
+        }
       }
     );
 
@@ -73,9 +76,17 @@ const Login = () => {
           }}
           theme="light"
           providers={[]}
-          onError={(error) => {
-            console.error("Auth error:", error);
-            toast.error(error.message);
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: 'Email',
+                password_label: 'Password',
+                button_label: 'Sign in',
+                loading_button_label: 'Signing in...',
+                social_provider_text: 'Sign in with {{provider}}',
+                link_text: "Already have an account? Sign in",
+              },
+            },
           }}
         />
       </div>
