@@ -11,7 +11,7 @@ const Login = () => {
   useEffect(() => {
     const createAdminUser = async () => {
       try {
-        // First check if admin exists
+        // First check if admin exists in profiles table
         const { data: existingAdmins } = await supabase
           .from('profiles')
           .select('id')
@@ -23,24 +23,9 @@ const Login = () => {
           return;
         }
 
-        // Check if the email is already registered
-        const adminEmail = 'admin.user@example.com';
-        const { data: { users } } = await supabase.auth.admin.listUsers();
-        
-        if (!users) {
-          console.error('Error fetching users list');
-          return;
-        }
-
-        const existingUser = users.find(user => user.email === adminEmail);
-        if (existingUser) {
-          console.log('Admin email already registered');
-          return;
-        }
-
-        // Create admin user if it doesn't exist
+        // Create admin user if none exists
         const { error: signUpError } = await supabase.auth.signUp({
-          email: adminEmail,
+          email: 'admin.user@example.com',
           password: 'admin123',
           options: {
             data: {
