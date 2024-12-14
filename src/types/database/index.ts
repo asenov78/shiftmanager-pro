@@ -1,3 +1,8 @@
+import { Department } from './department';
+import { Profile } from './profile';
+import { ActiveSession } from './session';
+import { Shift } from './shift';
+
 export * from './department';
 export * from './profile';
 export * from './session';

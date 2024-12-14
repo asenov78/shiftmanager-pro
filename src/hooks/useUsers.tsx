@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
+import { Profile } from "@/types/database";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
@@ -12,10 +12,10 @@ export const useUsers = () => {
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
-        .order('name');
+        .order('full_name');
       
       if (error) throw error;
-      return profiles as User[];
+      return profiles as Profile[];
     },
   });
 

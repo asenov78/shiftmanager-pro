@@ -17,7 +17,7 @@ export const ShiftCalendar = () => {
 
       const { data, error } = await supabase
         .from("shifts")
-        .select("*, profiles(name)")
+        .select("*, profiles(full_name)")
         .gte("start_time", startOfMonth.toISOString())
         .lte("end_time", endOfMonth.toISOString());
 

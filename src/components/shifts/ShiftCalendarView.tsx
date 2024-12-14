@@ -6,7 +6,7 @@ interface Shift {
   start_time: string;
   end_time: string;
   profiles: {
-    name: string;
+    full_name: string;
   };
 }
 
