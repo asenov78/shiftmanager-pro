@@ -1,75 +1,28 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const createAdminUser = async () => {
-      try {
-        // First check if admin exists in profiles table
-        const { data: existingAdmins } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'Admin')
-          .limit(1);
-
-        if (existingAdmins && existingAdmins.length > 0) {
-          console.log('Admin user already exists');
-          return;
-        }
-
-        // Try to sign in with admin credentials first
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: 'admin.user@example.com',
-          password: 'admin123',
-        });
-
-        // If sign in fails because user doesn't exist, create the user
-        if (signInError && signInError.message.includes('Invalid login credentials')) {
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: 'admin.user@example.com',
-            password: 'admin123',
-            options: {
-              data: {
-                full_name: 'Admin User'
-              }
-            }
-          });
-
-          if (signUpError) {
-            if (!signUpError.message.includes('already registered')) {
-              throw signUpError;
-            }
-          }
-
-          toast.success('Admin user created successfully. Please check email for verification.');
-        }
-      } catch (error: any) {
-        console.error('Error in admin creation process:', error);
-        if (error.message.includes('rate limit')) {
-          toast.error('Please wait a few minutes before trying again');
-        } else if (!error.message.includes('already registered')) {
-          toast.error('Error creating admin user');
-        }
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard", { replace: true });
       }
+      setIsLoading(false);
     };
-
-    // Check if we're already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        createAdminUser();
-      }
-    });
-  }, []);
+    checkSession();
+  }, [navigate]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           navigate("/dashboard", { replace: true });
         }
@@ -78,6 +31,10 @@ const Login = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

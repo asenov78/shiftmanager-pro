@@ -6,8 +6,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -44,7 +44,11 @@ export function AppSidebar() {
       // Then sign out from Supabase auth
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+
+      // Clear any local storage and cached data
+      localStorage.clear();
       
+      // Navigate to login page
       navigate("/login", { replace: true });
       toast.success("Logged out successfully");
     } catch (error) {

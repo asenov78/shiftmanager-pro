@@ -23,11 +23,13 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(!!session);
+      const isAuthenticated = !!session;
+      setSession(isAuthenticated);
       
-      // If user is logged out, clear the query cache
-      if (!session) {
+      // If user is logged out, clear the query cache and local storage
+      if (!isAuthenticated) {
         queryClient.clear();
+        localStorage.clear();
       }
     });
 
