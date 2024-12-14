@@ -41,7 +41,7 @@ const Login = () => {
         
         if (event === 'SIGNED_IN' && session) {
           navigate("/dashboard", { replace: true });
-        } else if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+        } else if (event === 'SIGNED_OUT') {
           toast.error("Session ended");
         } else if (event === 'PASSWORD_RECOVERY') {
           toast.info("Please check your email for password reset instructions");
