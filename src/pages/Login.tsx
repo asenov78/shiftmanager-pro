@@ -11,29 +11,37 @@ const Login = () => {
   useEffect(() => {
     const createAdminUser = async () => {
       try {
-        const { data: existingUsers, error: queryError } = await supabase
+        // First check if admin exists
+        const { data: existingAdmins } = await supabase
           .from('profiles')
-          .select('id, role')
-          .eq('role', 'Admin');
+          .select('id')
+          .eq('role', 'Admin')
+          .limit(1);
 
-        if (queryError) {
-          console.error('Error checking for admin:', queryError);
-          return;
-        }
-
-        if (existingUsers && existingUsers.length > 0) {
+        if (existingAdmins && existingAdmins.length > 0) {
           console.log('Admin user already exists');
           return;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
+        // Check if the email is already registered
         const adminEmail = 'admin.user@example.com';
-        const adminPassword = 'admin123';
+        const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
+        
+        if (getUserError) {
+          console.error('Error checking existing users:', getUserError);
+          return;
+        }
 
+        const existingUser = users?.find(user => user.email === adminEmail);
+        if (existingUser) {
+          console.log('Admin email already registered');
+          return;
+        }
+
+        // Create admin user if it doesn't exist
         const { error: signUpError } = await supabase.auth.signUp({
           email: adminEmail,
-          password: adminPassword,
+          password: 'admin123',
           options: {
             data: {
               full_name: 'Admin User'
@@ -42,24 +50,21 @@ const Login = () => {
         });
 
         if (signUpError) {
-          // If the error is not "user already exists", then show the error
-          if (!signUpError.message.includes('already registered')) {
-            console.error('Error in signup process:', signUpError);
-            if (signUpError.message.includes('rate limit')) {
-              toast.error('Rate limit reached. Please try again in a few minutes.');
-            } else {
-              toast.error('Failed to create admin user. Please try again later.');
-            }
+          if (signUpError.message.includes('already registered')) {
+            console.log('Admin user already exists');
+            return;
           }
-          return;
+          throw signUpError;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        toast.success('Admin user created successfully');
-
-      } catch (error) {
+        toast.success('Admin user created successfully. Please check email for verification.');
+      } catch (error: any) {
         console.error('Error in admin creation process:', error);
-        toast.error('An error occurred during admin setup');
+        if (error.message.includes('rate limit')) {
+          toast.error('Please wait a few minutes before trying again');
+        } else if (!error.message.includes('already registered')) {
+          toast.error('Error creating admin user');
+        }
       }
     };
 

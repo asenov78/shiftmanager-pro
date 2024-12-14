@@ -32,7 +32,7 @@ export type Database = {
           {
             foreignKeyName: "active_sessions_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
