@@ -37,12 +37,14 @@ const Login = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
-        console.log("Auth state changed:", event, session);
+        console.log("Auth state changed:", event);
+        
         if (event === 'SIGNED_IN' && session) {
           navigate("/dashboard", { replace: true });
-        }
-        if (event === 'TOKEN_REFRESHED' && !session) {
-          toast.error("Authentication error occurred");
+        } else if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+          toast.error("Session ended");
+        } else if (event === 'PASSWORD_RECOVERY') {
+          toast.info("Please check your email for password reset instructions");
         }
       }
     );
