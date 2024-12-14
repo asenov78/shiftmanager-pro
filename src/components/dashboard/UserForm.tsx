@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
-import { User } from "@/types/user";
+import { Profile } from "@/types/database";
 import {
   Select,
   SelectContent,
@@ -10,11 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-
-interface Department {
-  id: string;
-  name: string;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { Department } from "@/types/database";
 
 interface UserFormProps {
   user: {
@@ -23,7 +20,7 @@ interface UserFormProps {
     role: string;
     department: string;
   };
-  editingUser: User | null;
+  editingUser: Profile | null;
   onSave: () => void;
   onUpdate: () => void;
   onCancel: () => void;
@@ -41,10 +38,16 @@ export const UserForm = ({
   const [departments, setDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
-    const savedDepartments = localStorage.getItem("departments");
-    if (savedDepartments) {
-      setDepartments(JSON.parse(savedDepartments));
-    }
+    const fetchDepartments = async () => {
+      const { data } = await supabase
+        .from("departments")
+        .select("*")
+        .order("name");
+      if (data) {
+        setDepartments(data);
+      }
+    };
+    fetchDepartments();
   }, []);
 
   return (

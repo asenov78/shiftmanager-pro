@@ -14,25 +14,25 @@ export type Database = {
           created_at: string
           id: string
           last_seen: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           last_seen?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           last_seen?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "active_sessions_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -58,27 +58,47 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           department: string | null
+          email: string | null
+          full_name: string | null
           id: string
-          name: string | null
           role: string | null
+          updated_at: string
+          username: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           department?: string | null
+          email?: string | null
+          full_name?: string | null
           id: string
-          name?: string | null
           role?: string | null
+          updated_at?: string
+          username?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           department?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
-          name?: string | null
           role?: string | null
+          updated_at?: string
+          username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_fkey"
+            columns: ["department"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["name"]
+          },
+        ]
       }
       shifts: {
         Row: {
@@ -87,7 +107,7 @@ export type Database = {
           id: string
           start_time: string
           status: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -95,7 +115,7 @@ export type Database = {
           id?: string
           start_time: string
           status?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -103,7 +123,7 @@ export type Database = {
           id?: string
           start_time?: string
           status?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

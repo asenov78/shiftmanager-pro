@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
-import { User } from "@/types/user";
+import { Profile } from "@/types/database";
 import {
   Table,
   TableBody,
@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/table";
 
 interface UserTableProps {
-  users: User[];
-  onEdit: (user: User) => void;
+  users: Profile[];
+  onEdit: (user: Profile) => void;
   onDelete: (id: string) => void;
 }
 
@@ -31,7 +31,7 @@ export const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
       <TableBody>
         {users.map((user) => (
           <TableRow key={user.id}>
-            <TableCell>{user.name}</TableCell>
+            <TableCell>{user.full_name}</TableCell>
             <TableCell>{user.email}</TableCell>
             <TableCell>{user.role}</TableCell>
             <TableCell>{user.department}</TableCell>
