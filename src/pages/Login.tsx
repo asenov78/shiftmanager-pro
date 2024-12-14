@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AdminUserList } from "@supabase/supabase-js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,14 +26,15 @@ const Login = () => {
 
         // Check if the email is already registered
         const adminEmail = 'admin.user@example.com';
-        const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
+        const { data } = await supabase.auth.admin.listUsers();
+        const users = (data as AdminUserList).users;
         
-        if (getUserError) {
-          console.error('Error checking existing users:', getUserError);
+        if (!users) {
+          console.error('Error fetching users list');
           return;
         }
 
-        const existingUser = users?.find(user => user.email === adminEmail);
+        const existingUser = users.find(user => user.email === adminEmail);
         if (existingUser) {
           console.log('Admin email already registered');
           return;
