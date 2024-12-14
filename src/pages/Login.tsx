@@ -23,26 +23,32 @@ const Login = () => {
           return;
         }
 
-        // Create admin user if none exists
-        const { error: signUpError } = await supabase.auth.signUp({
+        // Try to sign in with admin credentials first
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email: 'admin.user@example.com',
           password: 'admin123',
-          options: {
-            data: {
-              full_name: 'Admin User'
-            }
-          }
         });
 
-        if (signUpError) {
-          if (signUpError.message.includes('already registered')) {
-            console.log('Admin user already exists');
-            return;
-          }
-          throw signUpError;
-        }
+        // If sign in fails because user doesn't exist, create the user
+        if (signInError && signInError.message.includes('Invalid login credentials')) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: 'admin.user@example.com',
+            password: 'admin123',
+            options: {
+              data: {
+                full_name: 'Admin User'
+              }
+            }
+          });
 
-        toast.success('Admin user created successfully. Please check email for verification.');
+          if (signUpError) {
+            if (!signUpError.message.includes('already registered')) {
+              throw signUpError;
+            }
+          }
+
+          toast.success('Admin user created successfully. Please check email for verification.');
+        }
       } catch (error: any) {
         console.error('Error in admin creation process:', error);
         if (error.message.includes('rate limit')) {
