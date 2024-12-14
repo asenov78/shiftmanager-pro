@@ -11,18 +11,32 @@ const Login = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard", { replace: true });
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Session check error:", error);
+          toast.error("Error checking session");
+          return;
+        }
+        
+        if (session) {
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+        toast.error("Error checking session");
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
+
     checkSession();
   }, [navigate]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session);
         if (event === 'SIGNED_IN' && session) {
           navigate("/dashboard", { replace: true });
         }
@@ -46,9 +60,23 @@ const Login = () => {
         </div>
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
+          appearance={{ 
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#2563eb',
+                  brandAccent: '#1d4ed8',
+                }
+              }
+            }
+          }}
           theme="light"
           providers={[]}
+          onError={(error) => {
+            console.error("Auth error:", error);
+            toast.error(error.message);
+          }}
         />
       </div>
     </div>
