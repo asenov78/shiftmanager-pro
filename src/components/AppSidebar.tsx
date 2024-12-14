@@ -32,10 +32,20 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
+      // First, remove the active session from our sessions table
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase
+          .from('active_sessions')
+          .delete()
+          .eq('user_id', session.user.id);
+      }
+
+      // Then sign out from Supabase auth
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      navigate("/login");
+      navigate("/login", { replace: true });
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Error logging out:", error);
