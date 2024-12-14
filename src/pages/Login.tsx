@@ -9,10 +9,8 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Create admin user on component mount
     const createAdminUser = async () => {
       try {
-        // Check for existing admin users first
         const { data: existingUsers, error: queryError } = await supabase
           .from('profiles')
           .select('id, role')
@@ -23,57 +21,42 @@ const Login = () => {
           return;
         }
 
-        // If admin exists, don't try to create one
         if (existingUsers && existingUsers.length > 0) {
           console.log('Admin user already exists');
           return;
         }
 
-        // Add initial delay before any auth attempts
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         const adminEmail = 'admin.user@example.com';
         const adminPassword = 'admin123';
 
-        // Try to sign up the admin user
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email: adminEmail,
           password: adminPassword,
           options: {
             data: {
-              name: 'Admin User'
+              full_name: 'Admin User'
             }
           }
         });
 
         if (signUpError) {
-          console.error('Error in signup process:', signUpError);
-          
-          if (signUpError.message.includes('rate limit')) {
-            toast.error('Rate limit reached. Please try again in a few minutes.');
-            return;
+          // If the error is not "user already exists", then show the error
+          if (!signUpError.message.includes('already registered')) {
+            console.error('Error in signup process:', signUpError);
+            if (signUpError.message.includes('rate limit')) {
+              toast.error('Rate limit reached. Please try again in a few minutes.');
+            } else {
+              toast.error('Failed to create admin user. Please try again later.');
+            }
           }
-          
-          toast.error('Failed to create admin user. Please try again later.');
           return;
         }
 
-        if (signUpData.user) {
-          // Wait for the profile trigger to complete
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          const { error: adminError } = await supabase.rpc('make_user_admin', {
-            user_id: signUpData.user.id
-          });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        toast.success('Admin user created successfully');
 
-          if (adminError) {
-            console.error('Error setting admin role:', adminError);
-            toast.error('Failed to set admin role');
-            return;
-          }
-
-          toast.success('Admin user created successfully');
-        }
       } catch (error) {
         console.error('Error in admin creation process:', error);
         toast.error('An error occurred during admin setup');
