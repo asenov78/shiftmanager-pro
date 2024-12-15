@@ -96,15 +96,22 @@ const Login = () => {
               },
               sign_up: {
                 email_label: 'Email',
-                password_label: 'Create a Password',
+                password_label: 'Password (minimum 6 characters)',
                 button_label: 'Sign Up',
                 loading_button_label: 'Signing up...',
                 social_provider_text: 'Sign up with {{provider}}',
                 link_text: "Don't have an account? Sign up",
+                password_helper_text: 'Password must be at least 6 characters long',
               },
             },
           }}
         />
+        <div className="mt-4 text-sm text-gray-600">
+          <p className="font-medium">Password Requirements:</p>
+          <ul className="list-disc list-inside mt-2">
+            <li>Minimum 6 characters long</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
