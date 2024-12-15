@@ -9,9 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Department } from "@/types/database";
 
 interface UserFormProps {
   user: {
@@ -35,20 +34,18 @@ export const UserForm = ({
   onCancel,
   onChange,
 }: UserFormProps) => {
-  const [departments, setDepartments] = useState<Department[]>([]);
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      const { data } = await supabase
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("departments")
         .select("*")
         .order("name");
-      if (data) {
-        setDepartments(data);
-      }
-    };
-    fetchDepartments();
-  }, []);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <div className="mb-6 p-4 border rounded-lg space-y-4">

@@ -72,6 +72,23 @@ export const DepartmentManagement = () => {
 
     try {
       if (editingDepartment) {
+        // Check if any profiles are using this department before updating
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('department', editingDepartment.name)
+          .limit(1);
+
+        if (profiles && profiles.length > 0) {
+          // Update the profiles with the new department name first
+          const { error: profilesError } = await supabase
+            .from('profiles')
+            .update({ department: departmentName })
+            .eq('department', editingDepartment.name);
+
+          if (profilesError) throw profilesError;
+        }
+
         const { error } = await supabase
           .from("departments")
           .update({ name: departmentName })
@@ -91,9 +108,9 @@ export const DepartmentManagement = () => {
       setDepartmentName("");
       setEditingDepartment(null);
       setIsOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error managing department:", error);
-      toast.error("Failed to save department");
+      toast.error(error.message || "Failed to save department");
     }
   };
 
@@ -103,8 +120,20 @@ export const DepartmentManagement = () => {
     setIsOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, name: string) => {
     try {
+      // Check if any profiles are using this department
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('department', name)
+        .limit(1);
+
+      if (profiles && profiles.length > 0) {
+        toast.error("Cannot delete department that has assigned users");
+        return;
+      }
+
       const { error } = await supabase
         .from("departments")
         .delete()
@@ -112,9 +141,9 @@ export const DepartmentManagement = () => {
 
       if (error) throw error;
       toast.success("Department deleted successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting department:", error);
-      toast.error("Failed to delete department");
+      toast.error(error.message || "Failed to delete department");
     }
   };
 
@@ -172,7 +201,7 @@ export const DepartmentManagement = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDelete(department.id)}
+                  onClick={() => handleDelete(department.id, department.name)}
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
