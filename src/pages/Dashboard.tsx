@@ -1,9 +1,7 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Stats } from "@/components/dashboard/Stats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
-import { UserManagement } from "@/components/dashboard/UserManagement";
-import { DepartmentManagement } from "@/components/dashboard/DepartmentManagement";
 import { ShiftCalendar } from "@/components/shifts/ShiftCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -12,7 +10,6 @@ import { toast } from "sonner";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const updateActiveSession = async () => {
@@ -58,8 +55,6 @@ const Dashboard = () => {
             <Stats />
             <ShiftCalendar />
             <QuickActions />
-            <UserManagement />
-            <DepartmentManagement />
           </div>
         </main>
       </div>

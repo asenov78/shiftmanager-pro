@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Users from "./pages/Users";
+import Departments from "./pages/Departments";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +73,22 @@ const App = () => (
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <PrivateRoute>
+                <Users />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/departments"
+            element={
+              <PrivateRoute>
+                <Departments />
               </PrivateRoute>
             }
           />

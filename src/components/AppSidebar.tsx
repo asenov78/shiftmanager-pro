@@ -1,4 +1,4 @@
-import { Calendar, LogOut, Users } from "lucide-react";
+import { Home, LogOut, Users, Grid2X2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,14 +16,19 @@ import {
 
 const menuItems = [
   {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: Home,
+  },
+  {
     title: "Users",
-    url: "/dashboard?section=users",
+    url: "/users",
     icon: Users,
   },
   {
-    title: "Shifts",
-    url: "/dashboard?section=shifts",
-    icon: Calendar,
+    title: "Departments",
+    url: "/departments",
+    icon: Grid2X2,
   },
 ];
 
