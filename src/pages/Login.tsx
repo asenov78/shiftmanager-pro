@@ -101,7 +101,6 @@ const Login = () => {
                 loading_button_label: 'Signing up...',
                 social_provider_text: 'Sign up with {{provider}}',
                 link_text: "Don't have an account? Sign up",
-                password_helper_text: 'Password must be at least 6 characters long',
               },
             },
           }}
