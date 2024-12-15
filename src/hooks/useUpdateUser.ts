@@ -12,6 +12,7 @@ export const useUpdateUser = () => {
     try {
       const session = await getCurrentSession();
 
+      // Check if user is admin or updating their own profile
       const { data: currentUserProfile } = await supabase
         .from('profiles')
         .select('role')
@@ -19,7 +20,8 @@ export const useUpdateUser = () => {
         .single();
 
       if (currentUserProfile?.role !== 'Admin' && session.user.id !== editingUser.id) {
-        throw new Error("Unauthorized to update this user");
+        toast.error("You can only update your own profile");
+        return;
       }
 
       // First verify that the department exists if it's being updated
@@ -31,15 +33,22 @@ export const useUpdateUser = () => {
           .single();
 
         if (deptError || !departmentExists) {
-          throw new Error("Selected department does not exist");
+          toast.error("Selected department does not exist");
+          return;
         }
+      }
+
+      // If user is not an admin, they can't change their role
+      if (currentUserProfile?.role !== 'Admin' && newUserData.role !== editingUser.role) {
+        toast.error("Only administrators can change user roles");
+        return;
       }
 
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: newUserData.full_name,
-          role: newUserData.role,
+          role: currentUserProfile?.role === 'Admin' ? newUserData.role : editingUser.role,
           department: newUserData.department,
           email: newUserData.email,
         })
@@ -47,13 +56,11 @@ export const useUpdateUser = () => {
 
       if (error) throw error;
       
-      // Invalidate queries to trigger a refresh
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User updated successfully");
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast.error(error.message || "Failed to update user");
-      throw error;
     }
   };
 
