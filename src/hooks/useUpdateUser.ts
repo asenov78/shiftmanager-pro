@@ -22,7 +22,7 @@ export const useUpdateUser = () => {
         throw new Error("Unauthorized to update this user");
       }
 
-      // First verify that the department exists
+      // First verify that the department exists if it's being updated
       if (newUserData.department) {
         const { data: departmentExists, error: deptError } = await supabase
           .from('departments')
@@ -41,6 +41,7 @@ export const useUpdateUser = () => {
           full_name: newUserData.full_name,
           role: newUserData.role,
           department: newUserData.department,
+          email: newUserData.email,
         })
         .eq('id', editingUser.id);
 

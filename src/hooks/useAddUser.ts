@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/user";
-import { AuthUser } from "@/types/userActions";
 import { toast } from "sonner";
 import { useUserAuth } from "./useUserAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,42 +26,10 @@ export const useAddUser = () => {
         }
       }
 
-      const { data: authData, error: adminError } = await supabase.auth.admin.listUsers();
-      if (adminError) throw adminError;
-
-      const users = authData?.users as AuthUser[] || [];
-      const existingUser = users.find(user => user.email === newUser.email);
-
-      if (existingUser) {
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', existingUser.id)
-          .single();
-
-        if (existingProfile) {
-          throw new Error("A user with this email already exists");
-        }
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: existingUser.id,
-            full_name: newUser.full_name,
-            role: newUser.role,
-            department: newUser.department,
-            email: newUser.email,
-          });
-
-        if (profileError) throw profileError;
-        queryClient.invalidateQueries({ queryKey: ['profiles'] });
-        toast.success("User profile created successfully");
-        return;
-      }
-
+      // Create the user with auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: newUser.email,
-        password: 'tempPassword123',
+        password: 'tempPassword123', // You might want to generate a random password or handle this differently
         options: {
           data: {
             full_name: newUser.full_name,
@@ -73,16 +40,18 @@ export const useAddUser = () => {
       if (signUpError) throw signUpError;
       if (!data.user) throw new Error("User creation failed");
 
-      const { error: updateError } = await supabase
+      // Update the profile with additional information
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          full_name: newUser.full_name,
           role: newUser.role,
           department: newUser.department,
           email: newUser.email,
         })
         .eq('id', data.user.id);
 
-      if (updateError) throw updateError;
+      if (profileError) throw profileError;
 
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User added successfully");
