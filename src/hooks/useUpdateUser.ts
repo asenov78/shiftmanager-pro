@@ -2,9 +2,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/user";
 import { toast } from "sonner";
 import { useUserAuth } from "./useUserAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useUpdateUser = () => {
   const { getCurrentSession } = useUserAuth();
+  const queryClient = useQueryClient();
 
   const handleUpdateUser = async (editingUser: User, newUserData: Partial<User>) => {
     try {
@@ -42,6 +44,8 @@ export const useUpdateUser = () => {
 
       if (error) throw error;
       
+      // Invalidate queries to trigger a refresh
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User updated successfully");
     } catch (error: any) {
       console.error("Error updating user:", error);
