@@ -3,14 +3,29 @@ import { User } from "@/types/user";
 import { AuthUser } from "@/types/userActions";
 import { toast } from "sonner";
 import { useUserAuth } from "./useUserAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useAddUser = () => {
   const { checkAdminStatus, getCurrentSession } = useUserAuth();
+  const queryClient = useQueryClient();
 
   const handleAddUser = async (newUser: Omit<User, 'id' | 'created_at'>) => {
     try {
       const session = await getCurrentSession();
       await checkAdminStatus(session.user.id);
+
+      // Verify department exists before proceeding
+      if (newUser.department) {
+        const { data: departmentExists, error: deptError } = await supabase
+          .from('departments')
+          .select('name')
+          .eq('name', newUser.department)
+          .single();
+
+        if (deptError || !departmentExists) {
+          throw new Error("Selected department does not exist");
+        }
+      }
 
       const { data: authData, error: adminError } = await supabase.auth.admin.listUsers();
       if (adminError) throw adminError;
@@ -36,9 +51,11 @@ export const useAddUser = () => {
             full_name: newUser.full_name,
             role: newUser.role,
             department: newUser.department,
+            email: newUser.email,
           });
 
         if (profileError) throw profileError;
+        queryClient.invalidateQueries({ queryKey: ['profiles'] });
         toast.success("User profile created successfully");
         return;
       }
@@ -61,11 +78,13 @@ export const useAddUser = () => {
         .update({
           role: newUser.role,
           department: newUser.department,
+          email: newUser.email,
         })
         .eq('id', data.user.id);
 
       if (updateError) throw updateError;
 
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User added successfully");
     } catch (error: any) {
       console.error("Error adding user:", error);

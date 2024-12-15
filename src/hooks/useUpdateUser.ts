@@ -23,14 +23,16 @@ export const useUpdateUser = () => {
       }
 
       // First verify that the department exists
-      const { data: departmentExists } = await supabase
-        .from('departments')
-        .select('name')
-        .eq('name', newUserData.department)
-        .single();
+      if (newUserData.department) {
+        const { data: departmentExists, error: deptError } = await supabase
+          .from('departments')
+          .select('name')
+          .eq('name', newUserData.department)
+          .single();
 
-      if (!departmentExists) {
-        throw new Error("Selected department does not exist");
+        if (deptError || !departmentExists) {
+          throw new Error("Selected department does not exist");
+        }
       }
 
       const { error } = await supabase
