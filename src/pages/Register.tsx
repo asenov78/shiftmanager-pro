@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { AuthChangeEvent } from "@supabase/supabase-js";
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,33 +39,9 @@ const Login = () => {
       async (event: AuthChangeEvent, session) => {
         console.log("Auth state changed:", event, "Session:", session?.user?.email);
         
-        if (event === 'SIGNED_IN' && session) {
-          if (session.user) {
-            try {
-              const { error: sessionError } = await supabase
-                .from('active_sessions')
-                .insert([{ user_id: session.user.id }]);
-              
-              if (sessionError) {
-                console.error("Error creating session record:", sessionError);
-                toast.error("Error creating session record");
-                return;
-              }
-            } catch (error) {
-              console.error("Error creating session record:", error);
-              toast.error("Error creating session record");
-              return;
-            }
-          }
-          
-          navigate("/dashboard", { replace: true });
-          toast.success("Successfully signed in!");
-        } else if (event === 'SIGNED_OUT') {
-          toast.info("Signed out");
-        } else if (event === 'USER_UPDATED') {
-          console.log("User updated");
-        } else if (event === 'PASSWORD_RECOVERY') {
-          toast.info("Please check your email for password reset instructions");
+        if (event === 'SIGNED_UP') {
+          toast.success("Registration successful! Please sign in.");
+          navigate("/login", { replace: true });
         }
       }
     );
@@ -82,12 +58,12 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Create a new account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-              create a new account
+            Already have an account?{" "}
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              Sign in
             </Link>
           </p>
         </div>
@@ -106,25 +82,31 @@ const Login = () => {
           }}
           theme="light"
           providers={[]}
-          redirectTo={`${window.location.origin}/dashboard`}
+          redirectTo={`${window.location.origin}/login`}
           onlyThirdPartyProviders={false}
           magicLink={false}
-          view="sign_in"
+          view="sign_up"
           showLinks={false}
           localization={{
             variables: {
-              sign_in: {
+              sign_up: {
                 email_label: 'Email',
                 password_label: 'Password',
-                button_label: 'Sign in',
-                loading_button_label: 'Signing in...',
+                button_label: 'Sign up',
+                loading_button_label: 'Signing up...',
               }
             },
           }}
         />
+        <div className="mt-4 text-sm text-gray-600">
+          <p className="font-medium">Password Requirements:</p>
+          <ul className="list-disc list-inside mt-2">
+            <li>Minimum 6 characters long</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default Register;
