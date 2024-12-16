@@ -39,7 +39,7 @@ const Register = () => {
       (event: AuthChangeEvent, session) => {
         console.log("Auth state changed:", event, "Session:", session?.user?.email);
         
-        if (event === "SIGNED_UP") {
+        if (event === 'SIGNED_UP') {
           toast.success("Registration successful! Please sign in.");
           navigate("/login", { replace: true });
         }
@@ -94,6 +94,8 @@ const Register = () => {
                 password_label: 'Password',
                 button_label: 'Sign up',
                 loading_button_label: 'Signing up...',
+                email_input_placeholder: 'Your email address',
+                password_input_placeholder: 'Your password',
               }
             },
           }}
