@@ -42,6 +42,13 @@ const Login = () => {
         if (event === 'SIGNED_IN' && session) {
           if (session.user) {
             try {
+              // First delete any existing session for this user
+              await supabase
+                .from('active_sessions')
+                .delete()
+                .eq('user_id', session.user.id);
+
+              // Then create a new session
               const { error: sessionError } = await supabase
                 .from('active_sessions')
                 .insert([{ user_id: session.user.id }]);
