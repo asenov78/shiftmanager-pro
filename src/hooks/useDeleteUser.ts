@@ -29,19 +29,43 @@ export const useDeleteUser = () => {
         return;
       }
 
-      // Delete the user from the profiles table
-      const { error: deleteError } = await supabase
+      // First, delete any active sessions for this user
+      const { error: sessionDeleteError } = await supabase
+        .from('active_sessions')
+        .delete()
+        .eq('user_id', id);
+
+      if (sessionDeleteError) {
+        console.error("Session delete error:", sessionDeleteError);
+        throw sessionDeleteError;
+      }
+
+      // Then delete any shifts associated with this user
+      const { error: shiftsDeleteError } = await supabase
+        .from('shifts')
+        .delete()
+        .eq('user_id', id);
+
+      if (shiftsDeleteError) {
+        console.error("Shifts delete error:", shiftsDeleteError);
+        throw shiftsDeleteError;
+      }
+
+      // Finally delete the user from the profiles table
+      const { error: profileDeleteError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', id);
 
-      if (deleteError) {
-        console.error("Delete error:", deleteError);
-        throw deleteError;
+      if (profileDeleteError) {
+        console.error("Profile delete error:", profileDeleteError);
+        throw profileDeleteError;
       }
-      
+
+      // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User deleted successfully");
+      
     } catch (error: any) {
       console.error("Error deleting user:", error);
       toast.error(error.message || "Failed to delete user");
