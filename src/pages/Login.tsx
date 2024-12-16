@@ -40,6 +40,19 @@ const Login = () => {
         console.log("Auth state changed:", event);
         
         if (event === 'SIGNED_IN' && session) {
+          // Create an active session record
+          if (session.user) {
+            try {
+              const { error } = await supabase
+                .from('active_sessions')
+                .insert([{ user_id: session.user.id }]);
+              
+              if (error) throw error;
+            } catch (error) {
+              console.error("Error creating session record:", error);
+            }
+          }
+          
           navigate("/dashboard", { replace: true });
           toast.success("Successfully signed in!");
         } else if (event === 'SIGNED_OUT') {
@@ -83,27 +96,8 @@ const Login = () => {
           }}
           theme="light"
           providers={[]}
-          redirectTo={window.location.origin}
-          localization={{
-            variables: {
-              sign_in: {
-                email_label: 'Email',
-                password_label: 'Password',
-                button_label: 'Sign in',
-                loading_button_label: 'Signing in...',
-                social_provider_text: 'Sign in with {{provider}}',
-                link_text: "Already have an account? Sign in",
-              },
-              sign_up: {
-                email_label: 'Email',
-                password_label: 'Password (minimum 6 characters)',
-                button_label: 'Sign Up',
-                loading_button_label: 'Signing up...',
-                social_provider_text: 'Sign up with {{provider}}',
-                link_text: "Don't have an account? Sign up",
-              },
-            },
-          }}
+          redirectTo={`${window.location.origin}/dashboard`}
+          onlyThirdPartyProviders={false}
         />
         <div className="mt-4 text-sm text-gray-600">
           <p className="font-medium">Password Requirements:</p>
