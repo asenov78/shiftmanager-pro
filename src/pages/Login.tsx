@@ -37,19 +37,24 @@ const Login = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session) => {
-        console.log("Auth state changed:", event);
+        console.log("Auth state changed:", event, "Session:", session?.user?.email);
         
         if (event === 'SIGNED_IN' && session) {
-          // Create an active session record
           if (session.user) {
             try {
-              const { error } = await supabase
+              const { error: sessionError } = await supabase
                 .from('active_sessions')
                 .insert([{ user_id: session.user.id }]);
               
-              if (error) throw error;
+              if (sessionError) {
+                console.error("Error creating session record:", sessionError);
+                toast.error("Error creating session record");
+                return;
+              }
             } catch (error) {
               console.error("Error creating session record:", error);
+              toast.error("Error creating session record");
+              return;
             }
           }
           
@@ -57,6 +62,8 @@ const Login = () => {
           toast.success("Successfully signed in!");
         } else if (event === 'SIGNED_OUT') {
           toast.info("Signed out");
+        } else if (event === 'USER_UPDATED') {
+          console.log("User updated");
         } else if (event === 'PASSWORD_RECOVERY') {
           toast.info("Please check your email for password reset instructions");
         }
