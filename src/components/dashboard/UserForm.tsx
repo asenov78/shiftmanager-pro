@@ -24,6 +24,7 @@ interface UserFormProps {
   onUpdate: () => void;
   onCancel: () => void;
   onChange: (field: string, value: string) => void;
+  currentUserRole: string;
 }
 
 export const UserForm = ({
@@ -33,6 +34,7 @@ export const UserForm = ({
   onUpdate,
   onCancel,
   onChange,
+  currentUserRole,
 }: UserFormProps) => {
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
@@ -47,6 +49,8 @@ export const UserForm = ({
     },
   });
 
+  const isAdmin = currentUserRole === 'Admin';
+
   return (
     <div className="mb-6 p-4 border rounded-lg space-y-4">
       <Input
@@ -59,10 +63,12 @@ export const UserForm = ({
         type="email"
         value={user.email}
         onChange={(e) => onChange("email", e.target.value)}
+        disabled={!isAdmin}
       />
       <Select
         value={user.role}
         onValueChange={(value) => onChange("role", value)}
+        disabled={!isAdmin}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select role" />
@@ -76,6 +82,7 @@ export const UserForm = ({
       <Select
         value={user.department}
         onValueChange={(value) => onChange("department", value)}
+        disabled={!isAdmin}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select department" />
@@ -99,7 +106,7 @@ export const UserForm = ({
           </>
         ) : (
           <>
-            <Button onClick={onSave}>Save</Button>
+            {isAdmin && <Button onClick={onSave}>Save</Button>}
             <Button variant="outline" onClick={onCancel}>
               Cancel
             </Button>

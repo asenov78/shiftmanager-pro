@@ -14,9 +14,12 @@ interface UserTableProps {
   users: Profile[];
   onEdit: (user: Profile) => void;
   onDelete: (id: string) => void;
+  currentUserRole: string;
 }
 
-export const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
+export const UserTable = ({ users, onEdit, onDelete, currentUserRole }: UserTableProps) => {
+  const isAdmin = currentUserRole === 'Admin';
+
   return (
     <Table>
       <TableHeader>
@@ -44,13 +47,15 @@ export const UserTable = ({ users, onEdit, onDelete }: UserTableProps) => {
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => onDelete(user.id)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
+                {isAdmin && (
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => onDelete(user.id)}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>
