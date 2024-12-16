@@ -39,7 +39,7 @@ const Register = () => {
       async (event: AuthChangeEvent, session: Session | null) => {
         console.log("Auth state changed:", event, "Session:", session?.user?.email);
         
-        if (event === "SIGNED_UP") {
+        if (event === AuthChangeEvent.SIGNED_UP) {
           toast.success("Registration successful! Please sign in.");
           navigate("/login", { replace: true });
         }
