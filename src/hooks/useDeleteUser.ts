@@ -19,28 +19,28 @@ export const useDeleteUser = () => {
         .single();
 
       if (currentUserProfile?.role !== 'Admin') {
-        toast.error("Only administrators can deactivate users");
+        toast.error("Only administrators can delete users");
         return;
       }
 
-      // Don't allow admin to deactivate themselves
+      // Don't allow admin to delete themselves
       if (id === session.user.id) {
-        toast.error("You cannot deactivate your own account");
+        toast.error("You cannot delete your own account");
         return;
       }
 
-      const { error: updateError } = await supabase
+      const { error: deleteError } = await supabase
         .from('profiles')
-        .update({ role: 'Inactive' })
+        .delete()
         .eq('id', id);
 
-      if (updateError) throw updateError;
+      if (deleteError) throw deleteError;
       
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
-      toast.success("User deactivated successfully");
+      toast.success("User deleted successfully");
     } catch (error: any) {
       console.error("Error deleting user:", error);
-      toast.error(error.message || "Failed to deactivate user");
+      toast.error(error.message || "Failed to delete user");
     }
   };
 

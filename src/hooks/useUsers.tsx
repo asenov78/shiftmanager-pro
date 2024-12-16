@@ -21,15 +21,22 @@ export const useUsers = () => {
 
   useEffect(() => {
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('profiles-changes')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'profiles' },
-        () => {
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('Realtime update received:', payload);
           queryClient.invalidateQueries({ queryKey: ['profiles'] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
