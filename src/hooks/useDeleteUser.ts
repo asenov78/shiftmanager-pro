@@ -29,12 +29,16 @@ export const useDeleteUser = () => {
         return;
       }
 
+      // Delete the user from the profiles table
       const { error: deleteError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', id);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error("Delete error:", deleteError);
+        throw deleteError;
+      }
       
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User deleted successfully");

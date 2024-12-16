@@ -20,6 +20,8 @@ export const useUsers = () => {
   });
 
   useEffect(() => {
+    console.log('Setting up realtime subscription for profiles');
+    
     const channel = supabase
       .channel('profiles-changes')
       .on(
@@ -39,6 +41,7 @@ export const useUsers = () => {
       });
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
