@@ -31,6 +31,8 @@ export const LoginForm = () => {
             password_label: 'Password',
             button_label: 'Sign in',
             loading_button_label: 'Signing in...',
+            email_input_placeholder: 'Your email address',
+            password_input_placeholder: 'Your password',
           }
         },
       }}
