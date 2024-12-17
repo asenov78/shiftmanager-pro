@@ -35,10 +35,10 @@ const Login = () => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log("Auth state changed:", _event, "Session:", session?.user?.email);
+      async (event, session) => {
+        console.log("Auth state changed:", event, "Session:", session?.user?.email);
         
-        if (_event === 'SIGNED_IN' && session) {
+        if (event === 'SIGNED_IN' && session) {
           if (session.user) {
             try {
               // First delete any existing session for this user
@@ -66,10 +66,8 @@ const Login = () => {
           
           navigate("/dashboard", { replace: true });
           toast.success("Successfully signed in!");
-        } else if (_event === 'SIGNED_OUT') {
+        } else if (event === 'SIGNED_OUT') {
           toast.info("Signed out");
-        } else if (_event === 'USER_UPDATED') {
-          console.log("User updated");
         }
       }
     );
