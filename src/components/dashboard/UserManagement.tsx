@@ -17,6 +17,7 @@ export const UserManagement = () => {
     email: "",
     role: "Employee",
     department: "",
+    password: "",
   });
 
   const { users, isLoading } = useUsers();
@@ -45,7 +46,7 @@ export const UserManagement = () => {
     } else {
       await handleAddUser(newUser);
     }
-    setNewUser({ full_name: "", email: "", role: "Employee", department: "" });
+    setNewUser({ full_name: "", email: "", role: "Employee", department: "", password: "" });
     setShowUserForm(false);
   };
 
@@ -56,13 +57,14 @@ export const UserManagement = () => {
       email: user.email || "",
       role: user.role || "Employee",
       department: user.department || "",
+      password: "",
     });
     setShowUserForm(true);
   };
 
   const handleCancelEdit = () => {
     setEditingUser(null);
-    setNewUser({ full_name: "", email: "", role: "Employee", department: "" });
+    setNewUser({ full_name: "", email: "", role: "Employee", department: "", password: "" });
     setShowUserForm(false);
   };
 

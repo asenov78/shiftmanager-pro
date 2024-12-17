@@ -8,10 +8,14 @@ export const useAddUser = () => {
   const { checkAdminStatus, getCurrentSession } = useUserAuth();
   const queryClient = useQueryClient();
 
-  const handleAddUser = async (newUser: Omit<User, 'id' | 'created_at'>) => {
+  const handleAddUser = async (newUser: Omit<User, 'id' | 'created_at'> & { password?: string }) => {
     try {
       const session = await getCurrentSession();
       await checkAdminStatus(session.user.id);
+
+      if (!newUser.password) {
+        throw new Error("Password is required for new users");
+      }
 
       // Verify department exists before proceeding
       if (newUser.department) {
@@ -29,7 +33,7 @@ export const useAddUser = () => {
       // Create the user with auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: newUser.email,
-        password: 'tempPassword123', // You might want to generate a random password or handle this differently
+        password: newUser.password,
         options: {
           data: {
             full_name: newUser.full_name,

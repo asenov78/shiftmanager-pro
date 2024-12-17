@@ -2,9 +2,8 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { AuthChangeEvent } from "@supabase/supabase-js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -36,10 +35,10 @@ const Login = () => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session) => {
-        console.log("Auth state changed:", event, "Session:", session?.user?.email);
+      async (_event, session) => {
+        console.log("Auth state changed:", _event, "Session:", session?.user?.email);
         
-        if (event === 'SIGNED_IN' && session) {
+        if (_event === 'SIGNED_IN' && session) {
           if (session.user) {
             try {
               // First delete any existing session for this user
@@ -67,12 +66,10 @@ const Login = () => {
           
           navigate("/dashboard", { replace: true });
           toast.success("Successfully signed in!");
-        } else if (event === 'SIGNED_OUT') {
+        } else if (_event === 'SIGNED_OUT') {
           toast.info("Signed out");
-        } else if (event === 'USER_UPDATED') {
+        } else if (_event === 'USER_UPDATED') {
           console.log("User updated");
-        } else if (event === 'PASSWORD_RECOVERY') {
-          toast.info("Please check your email for password reset instructions");
         }
       }
     );
@@ -91,12 +88,6 @@ const Login = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-              create a new account
-            </Link>
-          </p>
         </div>
         <Auth
           supabaseClient={supabase}

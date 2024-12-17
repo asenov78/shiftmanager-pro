@@ -18,6 +18,7 @@ interface UserFormProps {
     email: string;
     role: string;
     department: string;
+    password?: string;
   };
   editingUser: Profile | null;
   onSave: () => void;
@@ -63,8 +64,15 @@ export const UserForm = ({
         type="email"
         value={user.email}
         onChange={(e) => onChange("email", e.target.value)}
-        disabled={!isAdmin}
       />
+      {!editingUser && isAdmin && (
+        <Input
+          placeholder="Password"
+          type="password"
+          value={user.password || ''}
+          onChange={(e) => onChange("password", e.target.value)}
+        />
+      )}
       <Select
         value={user.role}
         onValueChange={(value) => onChange("role", value)}
