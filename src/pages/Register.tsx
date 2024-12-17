@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
+import { AuthError, AuthResponse } from "@supabase/supabase-js";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -35,10 +36,10 @@ const Register = () => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth state changed:", event, "Session:", session?.user?.email);
+      (_event, session) => {
+        console.log("Auth state changed:", _event, "Session:", session?.user?.email);
         
-        if (event === 'SIGNED_UP') {
+        if (_event === "SIGNED_UP") {
           toast.success("Registration successful! Please sign in.");
           navigate("/login", { replace: true });
         }
