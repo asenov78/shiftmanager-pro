@@ -16,16 +16,23 @@ const Login = () => {
         if (error) {
           console.error("Session check error:", error);
           
-          // Handle JSON parsing errors specifically
           if (error.message?.includes('body stream already')) {
             toast.error("Connection issue detected", {
               description: "We're having trouble processing your request. Please refresh the page and try again."
             });
             return;
           }
+
+          // Handle invalid credentials specifically
+          if (error.message?.includes('invalid_credentials')) {
+            toast.error("Invalid login details", {
+              description: "Please check your email and password and try again."
+            });
+            return;
+          }
           
-          toast.error("Unable to verify your session. Please try again.", {
-            description: "If this persists, please contact support."
+          toast.error("Unable to verify your session", {
+            description: "Please try signing in again. If this continues, contact support."
           });
           return;
         }
@@ -36,16 +43,25 @@ const Login = () => {
       } catch (error) {
         console.error("Session check error:", error);
         
-        // Handle JSON parsing errors in catch block
-        if (error instanceof Error && error.message?.includes('body stream already')) {
-          toast.error("Connection issue detected", {
-            description: "Please refresh your browser and try signing in again."
-          });
-        } else {
-          toast.error("System error occurred", {
-            description: "We're looking into this. Please try again later."
-          });
+        if (error instanceof Error) {
+          if (error.message?.includes('body stream already')) {
+            toast.error("Connection issue", {
+              description: "Please refresh your browser and try again."
+            });
+            return;
+          }
+          
+          if (error.message?.includes('invalid_credentials')) {
+            toast.error("Login failed", {
+              description: "The email or password you entered is incorrect."
+            });
+            return;
+          }
         }
+        
+        toast.error("Authentication error", {
+          description: "We couldn't process your login. Please try again."
+        });
       } finally {
         setIsLoading(false);
       }
@@ -76,32 +92,47 @@ const Login = () => {
               if (sessionError) {
                 console.error("Error creating session record:", sessionError);
                 
-                // Handle JSON parsing errors for session creation
                 if (sessionError.message?.includes('body stream already')) {
-                  toast.error("Session creation issue", {
-                    description: "We encountered a temporary problem. Please try signing in again."
+                  toast.error("Connection problem", {
+                    description: "Please refresh your browser and try signing in again."
+                  });
+                  return;
+                }
+
+                if (sessionError.message?.includes('invalid_credentials')) {
+                  toast.error("Authentication failed", {
+                    description: "Your credentials appear to be invalid. Please try again."
                   });
                   return;
                 }
                 
-                toast.error("Session initialization failed", {
-                  description: "Your login was successful, but we couldn't initialize your session properly."
+                toast.error("Session error", {
+                  description: "We couldn't complete the login process. Please try again."
                 });
                 return;
               }
             } catch (error) {
               console.error("Error creating session record:", error);
               
-              // Handle JSON parsing errors in catch block
-              if (error instanceof Error && error.message?.includes('body stream already')) {
-                toast.error("Connection problem", {
-                  description: "We couldn't complete your sign-in process. Please refresh and try again."
-                });
-              } else {
-                toast.error("Session initialization failed", {
-                  description: "Please try signing in again. If the problem persists, contact support."
-                });
+              if (error instanceof Error) {
+                if (error.message?.includes('body stream already')) {
+                  toast.error("Connection issue", {
+                    description: "Please refresh the page and try signing in again."
+                  });
+                  return;
+                }
+                
+                if (error.message?.includes('invalid_credentials')) {
+                  toast.error("Invalid credentials", {
+                    description: "Please check your login details and try again."
+                  });
+                  return;
+                }
               }
+              
+              toast.error("Login error", {
+                description: "We couldn't complete your sign-in. Please try again later."
+              });
               return;
             }
           }
@@ -111,8 +142,8 @@ const Login = () => {
             description: "You've successfully signed in to your account."
           });
         } else if (event === 'SIGNED_OUT') {
-          toast.info("You've been signed out", {
-            description: "Come back soon!"
+          toast.info("Signed out", {
+            description: "You've been successfully signed out. See you soon!"
           });
         }
       }
