@@ -15,7 +15,9 @@ const Login = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error("Session check error:", error);
-          toast.error("Error checking session");
+          toast.error("Unable to verify your session. Please try again.", {
+            description: "If this persists, please contact support."
+          });
           return;
         }
         
@@ -24,7 +26,9 @@ const Login = () => {
         }
       } catch (error) {
         console.error("Session check error:", error);
-        toast.error("Error checking session");
+        toast.error("System error occurred", {
+          description: "We're looking into this. Please try again later."
+        });
       } finally {
         setIsLoading(false);
       }
@@ -54,20 +58,28 @@ const Login = () => {
               
               if (sessionError) {
                 console.error("Error creating session record:", sessionError);
-                toast.error("Error creating session record");
+                toast.error("Session initialization failed", {
+                  description: "Your login was successful, but we couldn't initialize your session properly."
+                });
                 return;
               }
             } catch (error) {
               console.error("Error creating session record:", error);
-              toast.error("Error creating session record");
+              toast.error("Session initialization failed", {
+                description: "Please try signing in again. If the problem persists, contact support."
+              });
               return;
             }
           }
           
           navigate("/dashboard", { replace: true });
-          toast.success("Successfully signed in!");
+          toast.success("Welcome back!", {
+            description: "You've successfully signed in to your account."
+          });
         } else if (event === 'SIGNED_OUT') {
-          toast.info("Signed out");
+          toast.info("You've been signed out", {
+            description: "Come back soon!"
+          });
         }
       }
     );
