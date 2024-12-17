@@ -15,6 +15,15 @@ const Login = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error("Session check error:", error);
+          
+          // Handle JSON parsing errors specifically
+          if (error.message?.includes('body stream already')) {
+            toast.error("Connection issue detected", {
+              description: "We're having trouble processing your request. Please refresh the page and try again."
+            });
+            return;
+          }
+          
           toast.error("Unable to verify your session. Please try again.", {
             description: "If this persists, please contact support."
           });
@@ -26,9 +35,17 @@ const Login = () => {
         }
       } catch (error) {
         console.error("Session check error:", error);
-        toast.error("System error occurred", {
-          description: "We're looking into this. Please try again later."
-        });
+        
+        // Handle JSON parsing errors in catch block
+        if (error instanceof Error && error.message?.includes('body stream already')) {
+          toast.error("Connection issue detected", {
+            description: "Please refresh your browser and try signing in again."
+          });
+        } else {
+          toast.error("System error occurred", {
+            description: "We're looking into this. Please try again later."
+          });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -58,6 +75,15 @@ const Login = () => {
               
               if (sessionError) {
                 console.error("Error creating session record:", sessionError);
+                
+                // Handle JSON parsing errors for session creation
+                if (sessionError.message?.includes('body stream already')) {
+                  toast.error("Session creation issue", {
+                    description: "We encountered a temporary problem. Please try signing in again."
+                  });
+                  return;
+                }
+                
                 toast.error("Session initialization failed", {
                   description: "Your login was successful, but we couldn't initialize your session properly."
                 });
@@ -65,9 +91,17 @@ const Login = () => {
               }
             } catch (error) {
               console.error("Error creating session record:", error);
-              toast.error("Session initialization failed", {
-                description: "Please try signing in again. If the problem persists, contact support."
-              });
+              
+              // Handle JSON parsing errors in catch block
+              if (error instanceof Error && error.message?.includes('body stream already')) {
+                toast.error("Connection problem", {
+                  description: "We couldn't complete your sign-in process. Please refresh and try again."
+                });
+              } else {
+                toast.error("Session initialization failed", {
+                  description: "Please try signing in again. If the problem persists, contact support."
+                });
+              }
               return;
             }
           }
