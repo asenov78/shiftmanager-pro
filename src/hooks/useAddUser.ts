@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
+import { NewUser } from "@/types/user";
 import { toast } from "sonner";
 import { useUserAuth } from "./useUserAuth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ export const useAddUser = () => {
   const { checkAdminStatus, getCurrentSession } = useUserAuth();
   const queryClient = useQueryClient();
 
-  const handleAddUser = async (newUser: Omit<User, 'id' | 'created_at'> & { password?: string }) => {
+  const handleAddUser = async (newUser: NewUser) => {
     try {
       const session = await getCurrentSession();
       await checkAdminStatus(session.user.id);
