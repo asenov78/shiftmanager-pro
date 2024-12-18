@@ -37,7 +37,8 @@ export const useAddUser = () => {
         options: {
           data: {
             full_name: newUser.full_name,
-            department: newUser.department, // Add department to user metadata
+            department: newUser.department,
+            role: newUser.role || 'Employee',
           },
         },
       });
@@ -50,7 +51,7 @@ export const useAddUser = () => {
         .from('profiles')
         .update({
           full_name: newUser.full_name,
-          role: newUser.role,
+          role: newUser.role || 'Employee',
           department: newUser.department,
           email: newUser.email,
         })
