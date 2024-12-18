@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Profile } from "@/types/database";
 import {
   Table,
@@ -53,7 +53,7 @@ export const UserTable = ({ users, onEdit, onDelete, currentUserRole }: UserTabl
                     size="icon"
                     onClick={() => onDelete(user.id)}
                   >
-                    <Trash className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
