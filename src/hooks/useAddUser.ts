@@ -37,6 +37,7 @@ export const useAddUser = () => {
         options: {
           data: {
             full_name: newUser.full_name,
+            department: newUser.department, // Add department to user metadata
           },
         },
       });
@@ -55,7 +56,10 @@ export const useAddUser = () => {
         })
         .eq('id', data.user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile update error:", profileError);
+        throw new Error("Failed to update user profile");
+      }
 
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User added successfully");
