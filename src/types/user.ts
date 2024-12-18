@@ -1,8 +1,9 @@
 import { Profile } from "./database";
 
-export interface User extends Required<Pick<Profile, 'full_name' | 'email' | 'role' | 'department'>> {
-  id: string;
+export type NewUser = Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>> & {
   password?: string;
-}
-
-export type NewUser = Omit<User, 'id'>;
+  full_name: string;
+  email: string;
+  role: string;
+  department: string;
+};
