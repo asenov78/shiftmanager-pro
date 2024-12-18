@@ -1,11 +1,8 @@
-export interface User {
+import { Profile } from "./database";
+
+export interface User extends Required<Pick<Profile, 'full_name' | 'email' | 'role' | 'department'>> {
   id: string;
-  full_name: string;
-  email: string;
-  role: string;
-  department: string;
-  created_at?: string;
-  avatar_url?: string;
-  username?: string;
-  updated_at?: string;
+  password?: string;
 }
+
+export type NewUser = Omit<User, 'id'>;

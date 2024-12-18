@@ -1,12 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { UserForm } from "./UserForm";
-import { UserTable } from "./UserTable";
 import { useUsers } from "@/hooks/useUsers";
 import { useUserActions } from "./UserActions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserFormState } from "@/hooks/useUserFormState";
 import { UserFormHeader } from "./UserFormHeader";
+import { UserLoadingState } from "./UserLoadingState";
+import { UserFormContainer } from "./UserFormContainer";
+import { UserTableContainer } from "./UserTableContainer";
 
 export const UserManagement = () => {
   const {
@@ -48,7 +49,7 @@ export const UserManagement = () => {
   };
 
   if (isLoading) {
-    return <div>Loading users...</div>;
+    return <UserLoadingState />;
   }
 
   return (
@@ -58,18 +59,16 @@ export const UserManagement = () => {
         onAddClick={() => setShowUserForm(true)}
       />
       <CardContent>
-        {(showUserForm || editingUser) && (
-          <UserForm
-            user={newUser}
-            editingUser={editingUser}
-            onSave={handleUserSubmit}
-            onUpdate={handleUserSubmit}
-            onCancel={resetForm}
-            onChange={handleUserChange}
-            currentUserRole={currentUserRole}
-          />
-        )}
-        <UserTable
+        <UserFormContainer
+          showUserForm={showUserForm}
+          editingUser={editingUser}
+          newUser={newUser}
+          onUserSubmit={handleUserSubmit}
+          onCancel={resetForm}
+          onChange={handleUserChange}
+          currentUserRole={currentUserRole}
+        />
+        <UserTableContainer
           users={users}
           onEdit={initializeEditForm}
           onDelete={handleDeleteUser}

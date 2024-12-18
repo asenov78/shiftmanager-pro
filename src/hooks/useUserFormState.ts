@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Profile } from "@/types/database";
+import { NewUser } from "@/types/user";
 
 export const useUserFormState = () => {
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
-  const [newUser, setNewUser] = useState({
+  const [newUser, setNewUser] = useState<NewUser>({
     full_name: "",
     email: "",
     role: "Employee",
