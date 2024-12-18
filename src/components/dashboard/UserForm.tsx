@@ -90,7 +90,6 @@ export const UserForm = ({
       <Select
         value={user.department}
         onValueChange={(value) => onChange("department", value)}
-        disabled={!isAdmin}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select department" />

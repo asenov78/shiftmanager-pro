@@ -11,6 +11,10 @@ export const useUpdateUser = () => {
   const handleUpdateUser = async (editingUser: User, newUserData: Partial<User>) => {
     try {
       const session = await getCurrentSession();
+      if (!session) {
+        toast.error("You must be logged in to update users");
+        return;
+      }
 
       // Check if user is admin or updating their own profile
       const { data: currentUserProfile } = await supabase
@@ -44,17 +48,19 @@ export const useUpdateUser = () => {
         return;
       }
 
-      const { error } = await supabase
+      // Update the profile
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           full_name: newUserData.full_name,
           role: currentUserProfile?.role === 'Admin' ? newUserData.role : editingUser.role,
           department: newUserData.department,
           email: newUserData.email,
+          updated_at: new Date().toISOString()
         })
         .eq('id', editingUser.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
       
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User updated successfully");

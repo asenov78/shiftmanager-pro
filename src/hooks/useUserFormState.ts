@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { User } from "@/types/user";
+import { Profile } from "@/types/database";
 
 export const useUserFormState = () => {
   const [showUserForm, setShowUserForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [newUser, setNewUser] = useState({
     full_name: "",
     email: "",
@@ -13,7 +13,7 @@ export const useUserFormState = () => {
   });
 
   const handleUserChange = (field: string, value: string) => {
-    setNewUser({ ...newUser, [field]: value });
+    setNewUser((prev) => ({ ...prev, [field]: value }));
   };
 
   const resetForm = () => {
@@ -28,7 +28,7 @@ export const useUserFormState = () => {
     setShowUserForm(false);
   };
 
-  const initializeEditForm = (user: User) => {
+  const initializeEditForm = (user: Profile) => {
     setEditingUser(user);
     setNewUser({
       full_name: user.full_name || "",
