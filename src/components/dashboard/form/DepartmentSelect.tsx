@@ -27,16 +27,21 @@ export const DepartmentSelect = ({ value, onChange }: DepartmentSelectProps) => 
     },
   });
 
+  // Handle the special "no department" case
+  const handleChange = (newValue: string) => {
+    onChange(newValue === "none" ? "" : newValue);
+  };
+
   return (
     <Select
-      value={value}
-      onValueChange={onChange}
+      value={value || "none"}
+      onValueChange={handleChange}
     >
       <SelectTrigger>
         <SelectValue placeholder="Select department" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="">No Department</SelectItem>
+        <SelectItem value="none">No Department</SelectItem>
         {departments.map((dept) => (
           <SelectItem key={dept.id} value={dept.name}>
             {dept.name}
