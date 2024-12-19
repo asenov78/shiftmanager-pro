@@ -13,27 +13,46 @@ const Dashboard = () => {
 
   useEffect(() => {
     const updateActiveSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/login");
+          return;
+        }
 
-      const { error } = await supabase
-        .from('active_sessions')
-        .upsert(
-          { 
-            user_id: session.user.id,
-            last_seen: new Date().toISOString()
-          },
-          { 
-            onConflict: 'user_id'
-          }
-        );
+        // First check if profile exists
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', session.user.id)
+          .single();
 
-      if (error) {
+        if (profileError || !profile) {
+          console.error("Profile not found:", profileError);
+          toast.error("User profile not found");
+          return;
+        }
+
+        // Then handle the active session
+        const { error: sessionError } = await supabase
+          .from('active_sessions')
+          .upsert(
+            {
+              user_id: session.user.id,
+              last_seen: new Date().toISOString()
+            },
+            {
+              onConflict: 'user_id'
+            }
+          );
+
+        if (sessionError) {
+          console.error("Error updating active session:", sessionError);
+          toast.error("Failed to update session status");
+        }
+      } catch (error: any) {
         console.error("Error updating active session:", error);
-        toast.error("Failed to update session status");
+        toast.error(error.message || "Failed to update session status");
       }
     };
 
