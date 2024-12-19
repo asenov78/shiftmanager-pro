@@ -28,20 +28,22 @@ export const useUpdateUser = () => {
         return;
       }
 
-      // If department is being updated, verify it exists or is being cleared
-      if (newUserData.department !== undefined) {
-        if (newUserData.department) {
-          console.log('Verifying department:', newUserData.department);
-          const { data: departmentExists, error: deptError } = await supabase
-            .from('departments')
-            .select('name')
-            .eq('name', newUserData.department)
-            .single();
+      // Handle department update
+      const departmentToSet = newUserData.department === 'none' ? null : newUserData.department;
+      console.log('Setting department to:', departmentToSet);
 
-          if (deptError || !departmentExists) {
-            toast.error("Selected department does not exist");
-            return;
-          }
+      // If department is being updated and it's not null or 'none', verify it exists
+      if (departmentToSet) {
+        console.log('Verifying department:', departmentToSet);
+        const { data: departmentExists, error: deptError } = await supabase
+          .from('departments')
+          .select('name')
+          .eq('name', departmentToSet)
+          .single();
+
+        if (deptError || !departmentExists) {
+          toast.error("Selected department does not exist");
+          return;
         }
       }
 
@@ -51,23 +53,20 @@ export const useUpdateUser = () => {
         return;
       }
 
-      console.log('Updating profile with data:', {
+      const updateData = {
         full_name: newUserData.full_name,
         role: currentUserProfile?.role === 'Admin' ? newUserData.role : editingUser.role,
-        department: newUserData.department,
+        department: departmentToSet,
         email: newUserData.email,
-      });
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Updating profile with data:', updateData);
 
       // Update the profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          full_name: newUserData.full_name,
-          role: currentUserProfile?.role === 'Admin' ? newUserData.role : editingUser.role,
-          department: newUserData.department,
-          email: newUserData.email,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', editingUser.id);
 
       if (updateError) throw updateError;

@@ -27,15 +27,19 @@ export const DepartmentSelect = ({ value, onChange }: DepartmentSelectProps) => 
     },
   });
 
-  // Handle the special "no department" case
   const handleChange = (newValue: string) => {
     console.log('Department selected:', newValue);
-    onChange(newValue === "none" ? "" : newValue);
+    // Don't convert to empty string anymore, pass the actual value
+    onChange(newValue);
   };
+
+  // Use 'none' as value when there's no department selected
+  const currentValue = value || 'none';
+  console.log('Current department value:', currentValue);
 
   return (
     <Select
-      value={value || "none"}
+      value={currentValue}
       onValueChange={handleChange}
     >
       <SelectTrigger>
