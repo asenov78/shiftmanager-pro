@@ -10,6 +10,8 @@ export const useUpdateUser = () => {
 
   const handleUpdateUser = async (editingUser: Profile, newUserData: Partial<Profile>) => {
     try {
+      console.log('Starting user update with data:', newUserData);
+      
       const session = await getCurrentSession();
       if (!session) {
         toast.error("You must be logged in to update users");
@@ -29,11 +31,8 @@ export const useUpdateUser = () => {
       }
 
       // Handle department update
-      const departmentToSet = newUserData.department === 'none' ? null : newUserData.department;
-      console.log('Setting department to:', departmentToSet);
-
-      // If department is being updated and it's not null or 'none', verify it exists
-      if (departmentToSet) {
+      let departmentToSet = newUserData.department;
+      if (departmentToSet && departmentToSet !== 'none') {
         console.log('Verifying department:', departmentToSet);
         const { data: departmentExists, error: deptError } = await supabase
           .from('departments')
@@ -42,9 +41,12 @@ export const useUpdateUser = () => {
           .single();
 
         if (deptError || !departmentExists) {
+          console.error('Department verification error:', deptError);
           toast.error("Selected department does not exist");
           return;
         }
+      } else {
+        departmentToSet = null;
       }
 
       // If user is not an admin, they can't change their role
@@ -63,13 +65,15 @@ export const useUpdateUser = () => {
 
       console.log('Updating profile with data:', updateData);
 
-      // Update the profile
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('id', editingUser.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw updateError;
+      }
       
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User updated successfully");

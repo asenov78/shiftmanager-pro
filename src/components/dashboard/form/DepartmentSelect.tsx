@@ -29,17 +29,14 @@ export const DepartmentSelect = ({ value, onChange }: DepartmentSelectProps) => 
 
   const handleChange = (newValue: string) => {
     console.log('Department selected:', newValue);
-    // Don't convert to empty string anymore, pass the actual value
     onChange(newValue);
   };
 
-  // Use 'none' as value when there's no department selected
-  const currentValue = value || 'none';
-  console.log('Current department value:', currentValue);
+  console.log('Current department value:', value);
 
   return (
     <Select
-      value={currentValue}
+      value={value || 'none'}
       onValueChange={handleChange}
     >
       <SelectTrigger>
