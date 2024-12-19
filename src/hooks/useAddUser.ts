@@ -14,60 +14,43 @@ export const useAddUser = () => {
       await checkAdminStatus(session.user.id);
 
       if (!newUser.password) {
-        throw new Error("Password is required for new users");
+        toast.error("Password is required for new users");
+        return;
       }
 
-      // Verify department exists before proceeding
-      if (newUser.department) {
-        const { data: departmentExists, error: deptError } = await supabase
-          .from('departments')
-          .select('name')
-          .eq('name', newUser.department)
-          .single();
-
-        if (deptError || !departmentExists) {
-          throw new Error("Selected department does not exist");
-        }
-      }
-
-      // Create the user with auth
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // First, create the auth user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: newUser.email,
         password: newUser.password,
         options: {
           data: {
             full_name: newUser.full_name,
-            department: newUser.department,
-            role: newUser.role || 'Employee',
           },
         },
       });
 
       if (signUpError) throw signUpError;
-      if (!data.user) throw new Error("User creation failed");
+      if (!authData.user) throw new Error("Failed to create user");
 
-      // Update the profile with additional information
-      const { error: profileError } = await supabase
+      // Then update the profile with additional information
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           full_name: newUser.full_name,
-          role: newUser.role || 'Employee',
-          department: newUser.department,
           email: newUser.email,
+          role: newUser.role,
+          department: newUser.department,
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', data.user.id);
+        .eq('id', authData.user.id);
 
-      if (profileError) {
-        console.error("Profile update error:", profileError);
-        throw new Error("Failed to update user profile");
-      }
+      if (updateError) throw updateError;
 
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success("User added successfully");
     } catch (error: any) {
       console.error("Error adding user:", error);
       toast.error(error.message || "Failed to add user");
-      throw error;
     }
   };
 

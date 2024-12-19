@@ -88,7 +88,7 @@ export const UserForm = ({
         </SelectContent>
       </Select>
       <Select
-        value={user.department}
+        value={user.department || ''}
         onValueChange={(value) => onChange("department", value)}
       >
         <SelectTrigger>
