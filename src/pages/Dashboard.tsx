@@ -20,16 +20,22 @@ const Dashboard = () => {
           return;
         }
 
-        // First check if profile exists
+        // Check if profile exists using maybeSingle() instead of single()
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError || !profile) {
-          console.error("Profile not found:", profileError);
-          toast.error("User profile not found");
+        if (profileError) {
+          console.error("Error checking profile:", profileError);
+          toast.error("Error checking user profile");
+          return;
+        }
+
+        if (!profile) {
+          console.error("Profile not found for user:", session.user.id);
+          toast.error("User profile not found. Please contact support.");
           return;
         }
 
