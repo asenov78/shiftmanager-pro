@@ -28,17 +28,19 @@ export const useUpdateUser = () => {
         return;
       }
 
-      // First verify that the department exists if it's being updated
-      if (newUserData.department) {
-        const { data: departmentExists, error: deptError } = await supabase
-          .from('departments')
-          .select('name')
-          .eq('name', newUserData.department)
-          .single();
+      // If department is being updated, verify it exists or is being cleared
+      if (newUserData.department !== undefined) {
+        if (newUserData.department) {
+          const { data: departmentExists, error: deptError } = await supabase
+            .from('departments')
+            .select('name')
+            .eq('name', newUserData.department)
+            .single();
 
-        if (deptError || !departmentExists) {
-          toast.error("Selected department does not exist");
-          return;
+          if (deptError || !departmentExists) {
+            toast.error("Selected department does not exist");
+            return;
+          }
         }
       }
 

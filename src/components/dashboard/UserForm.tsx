@@ -2,15 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { Profile } from "@/types/database";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { DepartmentSelect } from "./form/DepartmentSelect";
+import { RoleSelect } from "./form/RoleSelect";
 
 interface UserFormProps {
   user: {
@@ -37,20 +30,15 @@ export const UserForm = ({
   onChange,
   currentUserRole,
 }: UserFormProps) => {
-  const { data: departments = [] } = useQuery({
-    queryKey: ['departments'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("departments")
-        .select("*")
-        .order("name");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const isAdmin = currentUserRole === 'Admin';
+
+  const handleDepartmentChange = (value: string) => {
+    onChange("department", value);
+  };
+
+  const handleRoleChange = (value: string) => {
+    onChange("role", value);
+  };
 
   return (
     <div className="mb-6 p-4 border rounded-lg space-y-4">
@@ -73,35 +61,15 @@ export const UserForm = ({
           onChange={(e) => onChange("password", e.target.value)}
         />
       )}
-      <Select
+      <RoleSelect
         value={user.role}
-        onValueChange={(value) => onChange("role", value)}
+        onChange={handleRoleChange}
         disabled={!isAdmin}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select role" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Employee">Employee</SelectItem>
-          <SelectItem value="Manager">Manager</SelectItem>
-          <SelectItem value="Admin">Admin</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select
-        value={user.department || ''}
-        onValueChange={(value) => onChange("department", value)}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select department" />
-        </SelectTrigger>
-        <SelectContent>
-          {departments.map((dept) => (
-            <SelectItem key={dept.id} value={dept.name}>
-              {dept.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      />
+      <DepartmentSelect
+        value={user.department}
+        onChange={handleDepartmentChange}
+      />
       <div className="flex gap-2">
         {editingUser ? (
           <>
