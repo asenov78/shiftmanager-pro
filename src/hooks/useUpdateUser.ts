@@ -31,6 +31,7 @@ export const useUpdateUser = () => {
       // If department is being updated, verify it exists or is being cleared
       if (newUserData.department !== undefined) {
         if (newUserData.department) {
+          console.log('Verifying department:', newUserData.department);
           const { data: departmentExists, error: deptError } = await supabase
             .from('departments')
             .select('name')
@@ -49,6 +50,13 @@ export const useUpdateUser = () => {
         toast.error("Only administrators can change user roles");
         return;
       }
+
+      console.log('Updating profile with data:', {
+        full_name: newUserData.full_name,
+        role: currentUserProfile?.role === 'Admin' ? newUserData.role : editingUser.role,
+        department: newUserData.department,
+        email: newUserData.email,
+      });
 
       // Update the profile
       const { error: updateError } = await supabase

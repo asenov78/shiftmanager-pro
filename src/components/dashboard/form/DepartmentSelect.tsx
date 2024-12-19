@@ -29,6 +29,7 @@ export const DepartmentSelect = ({ value, onChange }: DepartmentSelectProps) => 
 
   // Handle the special "no department" case
   const handleChange = (newValue: string) => {
+    console.log('Department selected:', newValue);
     onChange(newValue === "none" ? "" : newValue);
   };
 
